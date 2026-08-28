@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SEMED · Gerador de Memorando</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Bibliotecas para gerar o Word -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.43.0/docxtemplater.js"></script>
+<script src="https://unpkg.com/pizzip@3.1.6/dist/pizzip.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1a3a5c; --navy-dark:#0e2338; --paper:#faf7f0; --ink:#1f2937;
+    --ink-soft:#4b5566; --gold:#a9791f; --gold-soft:#e8d8ae; --consumo:#2f6f4f;
+    --consumo-bg:#e7f2ec; --permanente:#6b4ba0; --permanente-bg:#efe9f7;
+    --danger:#b91c1c; --danger-bg:#fdecec; --surface:#ffffff; --surface-muted:#f3f1ec;
+    --line:#e2ddd0;
+  }
+  *{font-family:'Inter',system-ui,sans-serif;}
+  .font-mono-num{font-family:'IBM Plex Mono', monospace;}
+  body{background:var(--surface-muted); color:var(--ink);}
+
+  .step-badge{
+    width:28px;height:28px;border-radius:9999px; display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px; background:var(--navy); color:#fff; flex-shrink:0;
+  }
+  .step-badge.done{background:var(--consumo);}
+  .step-badge.locked{background:#c9c4b6; color:#6b6555;}
+  .field-label{font-size:12px; font-weight:600; letter-spacing:.04em; text-transform:uppercase; color:var(--ink-soft);}
+
+  input[type=text], input[type=number], select{
+    background:#fff; border:1px solid var(--line); border-radius:8px; padding:9px 12px; font-size:14px; color:var(--ink); width:100%; transition:border-color .15s, box-shadow .15s;
+  }
+  input:focus, select:focus{ outline:none; border-color:var(--navy); box-shadow:0 0 0 3px rgba(26,58,92,0.12); }
+  input:disabled, select:disabled{background:#f4f3ee; color:#9a9584; cursor:not-allowed;}
+
+  .btn{ display:inline-flex; align-items:center; gap:8px; justify-content:center; padding:10px 18px; border-radius:8px; font-weight:600; font-size:14px; cursor:pointer; transition: transform .08s, box-shadow .15s, background .15s; border:1px solid transparent; }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{background:var(--navy); color:#fff;} .btn-primary:hover{background:var(--navy-dark);} .btn-primary:disabled{background:#c9c4b6; cursor:not-allowed;}
+  .btn-gold{background:var(--gold); color:#fff;} .btn-gold:hover{background:#8f6519;} .btn-gold:disabled{background:#c9c4b6; cursor:not-allowed;}
+  .btn-ghost{background:transparent; border-color:var(--line); color:var(--ink-soft);} .btn-ghost:hover{background:var(--surface-muted); color:var(--ink);}
+  .btn-danger-ghost{background:transparent; color:var(--danger); border-color:#f3b7b7;} .btn-danger-ghost:hover{background:var(--danger-bg);}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px;}
+  table.items-table tbody tr:nth-child(even){background:#faf9f6;}
+  table.items-table td, table.items-table th{padding:10px 12px; font-size:13.5px;}
+</style>
+</head>
+<body class="min-h-screen">
+
+  <div class="max-w-5xl mx-auto px-6 pt-8">
+    <header class="bg-[var(--navy)] text-white p-6 rounded-xl shadow-sm">
+      <div>
+        <p class="text-[11px] text-[var(--gold-soft)] font-bold uppercase tracking-widest mb-1">Prefeitura Municipal</p>
+        <h1 class="text-xl font-bold">SEMED - Gerador de Memorandos Word</h1>
+      </div>
+    </header>
+  </div>
+
+  <main class="max-w-5xl mx-auto px-6 py-6 space-y-6">
+    <div class="flex items-center gap-2 text-sm text-[var(--ink-soft)] flex-wrap px-2">
+      <span id="stepBadge1" class="step-badge">1</span> Identificação <span class="mx-1 text-[var(--line)]">—</span>
+      <span id="stepBadge2" class="step-badge">2</span> Categoria <span class="mx-1 text-[var(--line)]">—</span>
+      <span id="stepBadge3" class="step-badge">3</span> Itens / Serviços
+    </div>
+
+    <!-- STEP 1: Identificação -->
+    <section class="card p-6 space-y-5">
+      <div class="flex items-center gap-2">
+        <span class="step-badge">1</span>
+        <h2 class="font-bold text-[var(--navy)]">Identificação da Unidade Escolar</h2>
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label class="field-label">Escola Municipal</label>
+          <select id="schoolSelect" class="mt-1"><option value="">Selecione a escola…</option></select>
+        </div>
+        <div>
+          <label class="field-label">Nome do(a) Gestor(a)</label>
+          <input id="managerInput" type="text" class="mt-1" placeholder="Nome completo (Pode ser editado)">
+        </div>
+        <div>
+          <label class="field-label">Nº da Portaria do Gestor</label>
+          <input id="portariaInput" type="text" class="mt-1" placeholder="Ex: 123/2026">
+        </div>
+        <div>
+          <label class="field-label">Nº do Memorando</label>
+          <input id="memoNumberInput" type="text" class="font-mono-num mt-1" value="001">
+        </div>
+      </div>
+    </section>
+
+    <!-- STEP 2: Categoria -->
+    <section class="card p-6 space-y-4">
+      <div class="flex items-center gap-2">
+        <span class="step-badge">2</span>
+        <h2 class="font-bold text-[var(--navy)]">Categoria do Memorando</h2>
+      </div>
+      <select id="categorySelect">
+        <option value="">Selecione a categoria…</option>
+        <option value="consumo">Material de Consumo</option>
+        <option value="permanente">Material Permanente</option>
+        <option value="servico">Serviço / Manutenção</option>
+      </select>
+    </section>
+
+    <!-- STEP 3: Itens ou Serviços -->
+    <section class="card p-6 space-y-4">
+      <div class="flex items-center gap-2">
+        <span class="step-badge">3</span>
+        <h2 class="font-bold text-[var(--navy)]" id="step3Title">Itens ou Serviço</h2>
+      </div>
+
+      <div id="noCategoryNote" class="text-sm rounded-lg px-4 py-3 bg-[var(--surface-muted)] text-[var(--ink-soft)]">
+        Selecione a categoria do memorando (passo 2).
+      </div>
+
+      <!-- PARA MATERIAIS -->
+      <div id="itemPickerBlock" class="hidden space-y-4">
+        <div class="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+          <div>
+            <label class="field-label">Buscar no catálogo</label>
+            <select id="catalogSelect" class="mt-1"></select>
+          </div>
+          <div class="flex gap-2">
+            <div class="w-24">
+              <label class="field-label">Qtd.</label>
+              <input id="catalogQty" type="number" min="1" value="1" class="mt-1">
+            </div>
+          </div>
+        </div>
+        <button id="addCatalogItemBtn" class="btn btn-primary">Adicionar Item</button>
+
+        <details class="pt-2">
+          <summary class="text-sm font-semibold text-[var(--navy)] cursor-pointer select-none">+ Adicionar item avulso (fora do catálogo)</summary>
+          <div class="mt-3 grid sm:grid-cols-4 gap-3">
+            <div class="sm:col-span-2">
+              <label class="field-label">Nome do produto</label>
+              <input id="customName" type="text" class="mt-1">
+            </div>
+            <div>
+              <label class="field-label">Unidade</label>
+              <select id="customUnit" class="mt-1">
+                <option>Unidade</option><option>Caixa</option><option>Fardo</option><option>Litro</option><option>Pacote</option><option>Rolo</option><option>Galão</option><option>Kg</option>
+              </select>
+            </div>
+            <div>
+              <label class="field-label">Quantidade</label>
+              <input id="customQty" type="number" min="1" value="1" class="mt-1">
+            </div>
+          </div>
+          <button id="addCustomItemBtn" class="btn btn-ghost mt-3">Adicionar item avulso</button>
+        </details>
+
+        <div id="itemsTableWrap" class="hidden pt-2">
+          <table class="items-table w-full border border-[var(--line)] rounded-lg overflow-hidden">
+            <thead class="bg-[var(--surface-muted)] text-left text-[var(--ink-soft)] uppercase text-[11px] tracking-wide">
+              <tr><th>Produto</th><th>Unidade</th><th>Qtd.</th><th></th></tr>
+            </thead>
+            <tbody id="itemsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PARA SERVIÇOS -->
+      <div id="serviceFieldsBlock" class="hidden space-y-4">
+        <div>
+          <label class="field-label">Solicitação Desejada</label>
+          <input id="solicitacaoInput" type="text" class="mt-1" placeholder="Ex: manutenção na rede elétrica">
+        </div>
+        <div>
+          <label class="field-label">Detalhe para a Solicitação</label>
+          <input id="detalheInput" type="text" class="mt-1" placeholder="Ex: nas salas de aula 01 e 02">
+        </div>
+      </div>
+    </section>
+
+    <!-- Actions -->
+    <div class="flex flex-wrap gap-3 justify-end pb-8">
+      <button id="clearFormBtn" class="btn btn-danger-ghost">Limpar Formulário</button>
+      <button id="generateWordBtn" class="btn btn-gold text-lg px-8 py-3" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" class="mr-2 inline-block"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Gerar e Baixar Memorando
+      </button>
+    </div>
+  </main>
+
+<script>
+const SCHOOLS = [
+  // SEDE
+  { name: "EMEB ADROALDO ALVES MATOS E EJA", director: "ANTONIO ALMEIDA BEZERRA" },
+  { name: "EMEB DR ANTONIO MUNIZ ALVES", director: "ELISÂNGELA LIMA RODRIGUES" },
+  { name: "EMEB FREI ANTONIO SINIBALDI- EJA", director: "JOÃO BORBA COSTA" },
+  { name: "EMEB NEY BRAGA E EJA", director: "ELTON ALVES MEMÓRIA" },
+  { name: "EMEB PROFESSORA DINARE FEITOSA", director: "ANTÔNIA ALCIANE B. DOS SANTOS" },
+  { name: "EMEB RAIMUNDO MEIRELES PINTO E EJA", director: "SANDRA MARIA PEREIRA DE AQUINO REGO" },
+  { name: "EMEB ROSILDA MARTINS DE OLIVEIRA", director: "CRISTINA MATOS DE CARVALHO" },
+  { name: "EMEB VEREADOR ANTONIO FEITOSA PRIMO E EJA", director: "CONCEIÇÃO" },
+  { name: "I.E.I ADROALDO ALVES MATOS E ANEXO", director: "DALLYANNA SOARES TRINDADE" },
+  { name: "I.E.I MARIA STELA FERREIRA DE ARAÚJO", director: "ELANE LINS BARBOSA" },
+  { name: "BIBLIOTECA MUN. PROF. RAIMUNDA BEZERRA", director: "CINTHIA VARÃO DA SILVA" },
+  { name: "PROJETO ALFABETIZA - BOM JARDIM", director: "CHIRLE SILVA DUARTE" },
+  { name: "PROJETO BOM SAMARITANO", director: "MÁRCIO RODRIGUES" },
+  { name: "PROJETO VIDA", director: "CÉLIA REGINA" },
+  { name: "SEMED", director: "" },
+  // REGIÃO CARÚ
+  { name: "ADELAIDE MATOS", director: "ROSINALVA DA CONCEIÇÃO R. SANTOS" },
+  { name: "ALEXANDRE COSTA", director: "LAURA ALVES CARVALHO" },
+  { name: "ALMIRANTE BARROSO", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
+  { name: "ANTONIO CARLOS BECKMAN", director: "ANTONIO NILSON PEREIRA GARROS" },
+  { name: "ANTONIO MOREIRA GOMES", director: "JUCIVÂNIA SILVA SANTOS" },
+  { name: "ANTONIO PALHANO SILVA", director: "LAURA ALVES CARVALHO" },
+  { name: "BOA ESPERANÇA", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
+  { name: "CASTRO ALVES", director: "LUCILMARA OLIVEIRA SOUSA" },
+  { name: "CLEUMA SANTOS DE MATOS", director: "LUCILMARA OLIVEIRA SOUSA" },
+  { name: "CORAÇÃO DE JESUS", director: "JOSÉ DE ALMEIDA SOUSA" },
+  { name: "DOM PEDRO I", director: "LUIS CARLOS ALMEIDA SOARES" },
+  { name: "DOM PEDRO II", director: "ANA MARIA BITENCOURTE VIANA" },
+  { name: "DOM VALMIR", director: "JOSÉ DE ALMEIDA SOUSA" },
+  { name: "DR. ANTONIO DINO", director: "ILDEILDE DE SOUSA COSTA" },
+  { name: "ELZAMIR DO NASCIMENTO SOUSA", director: "LAURA ALVES CARVALHO" },
+  { name: "DR. MÁRIO HENRIQUE SIMONSEN e ANEXO", director: "ANA MARIA BETENCOURTE VIANA" },
+  { name: "DR. NUNES FREIRE", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
+  { name: "DUQUE DE CAXIAS", director: "FRANCISCO VAGNER COSTA FERREIRA" },
+  { name: "ESTER DE FIGUEIRA FERRAZ", director: "ILDEILDE DE SOUSA COSTA" },
+  { name: "EURICO GASPAR DUTRA", director: "ANA MARIA BETENCOURTE VIANA" },
+  { name: "FREI DAMIÃO", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
+  { name: "FREI HENRIQUE DE COIMBRA", director: "MARIA DA CONCEIÇÃO" },
+  { name: "FREI MÁRIO GUIDDI", director: "LUIS CARLOS ALMEIDA SOARES" },
+  { name: "GETULIO VARGAS", director: "AURILÂNDIA SANTOS OLIVEIRA" },
+  { name: "JOSÉ BONIFÁCIO", director: "DJALMA DO NASCIMENTO FERREIRA" },
+  { name: "LEONEL BRIZOLA", director: "FRANCISCA DAS CHAGAS L. DOS SANTOS" },
+  { name: "LUCINETE LIMA MORAIS", director: "ANTONIO NILSON PEREIRA GARROS" },
+  { name: "LUIS REGO", director: "ILDEILDE DE SOUSA COSTA" },
+  { name: "MACHADO DE ASSIS", director: "MARIA DA CONCEIÇÃO" },
+  { name: "MANOEL DA CONCEIÇÃO", director: "JUCIVÂNIA SILVA SANTOS" },
+  { name: "MEN DE SÁ", director: "JEANE JACINTO COSTA" },
+  { name: "NAGIB HAICKEL", director: "JUCIVÂNIA SILVA SANTOS" },
+  { name: "NOSSA SENHORA DE FÁTIMA", director: "LUIS CARLOS ALMEIDA SOARES" },
+  { name: "NOSSA SENHORA DOS ANJOS", director: "ROSINALVA DA CONCEIÇÃO R. SANTOS" },
+  { name: "OSVALDO CRUZ E ANEXO", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
+  { name: "PEDRO NEIVA DE SANTANA", director: "LAURA ALVES CARVALHO" },
+  { name: "PRINCESA ISABEL", director: "LUIS CARLOS ALMEIDA SOARES" },
+  { name: "RAIMUNDO BENEDITO DUARTE NEVES", director: "MARIA AUCILEIDE DE C. ROCHA" },
+  { name: "RUTH CARDOSO", director: "JOSÉ DE ALMEIDA SOUSA" },
+  { name: "SANTA CLARA", director: "JEANE JACINTO COSTA" },
+  { name: "SÃO BENEDITO", director: "ILDEILDE DE SOUSA COSTA" },
+  { name: "SÃO JOSÉ", director: "DJALMA DO NASCIMENTO FERREIRA" },
+  { name: "SÃO MIGUEL", director: "JOSÉ DE ALMEIDA SOUSA" },
+  { name: "SÃO RAIMUNDO", director: "JUCIVÂNIA SILVA SANTOS" },
+  { name: "SERAFIN VIEIRA DO VALE", director: "ILDEILDE DE SOUSA COSTA" },
+  { name: "VEREADORA FRANCISCA GERMANO DE B. NEVES", director: "LUIZ CARLOS ALMEIRA SOARES" },
+  { name: "ZEFERINO GOMES PEREIRA", director: "ANTONIO NILSON PEREIRA GARROS" },
+  // REGIÃO DA VARIG
+  { name: "03 DE SETEMBRO", director: "MARIANA DE ABREU REGO" },
+  { name: "BOM JESUS", director: "GILDETE FERREIRA DO NASCIMENTO" },
+  { name: "CASTELO BRANCO", director: "PAULO DO NASCIMENTODE ARAÚJO" },
+  { name: "CECÍLIA MEIRELES", director: "KEILIENE PEREIRA DO SANTOS" },
+  { name: "DEUS É POR NÓS", director: "WILLIAM SANTOS DA SILVA" },
+  { name: "DEUS É TUDO", director: "WILLIAM SANTOS DA SILVA" },
+  { name: "DR. BENEDITO ALVES CARVALHO", director: "PAULO DO NASCIMENTODE ARAÚJO" },
+  { name: "EDSON LOBÃO", director: "PAULO DO NASCIMENTODE ARAÚJO" },
+  { name: "GONÇALVES DIAS", director: "WILLIAM SANTOS DA SILVA" },
+  { name: "INFÂNCIA DO AMOR", director: "PAULO DO NASCIMENTODE ARAÚJO" },
+  { name: "JOÃO PAULO II", director: "KEILIENE PEREIRA DO SANTOS" },
+  { name: "JOSUÉ MONTELO", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
+  { name: "LAGO VERDE", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
+  { name: "MARIA DO SOCORRO OTÁVIO DE OLIVEIRA", director: "MARIANA DE ABREU REGO" },
+  { name: "MARLY ANDRÉ", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
+  { name: "NOSSA SENHORA APARECIDA E ANEXO", director: "GILDETE FERREIRA DO NASCIMENTO" },
+  { name: "PADRE NEWTON INÁCIO PEREIRA", director: "VALDIRA SANTOS PAIVA" },
+  { name: "PEDREIRA VITAL", director: "WILLIAM SANTOS DA SILVA" },
+  { name: "ROSA CASTRO", director: "VALDIRA SANTOS PAIVA" },
+  { name: "ROSEANA SARNEY", director: "KEILIENE PEREIRA DO SANTOS" },
+  { name: "SANTA MARIA I", director: "ANA CRISTINA RODRIGUES SABNTOS" },
+  { name: "SANTA RITA DE CÁSSIA", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
+  { name: "SANTA TEREZA", director: "WILLIAN SANTOS DA SILVA" },
+  { name: "SANTO ANTÔNIO (Pov. KM 60)", director: "WILLIAM SANTOS DA SILVA" },
+  { name: "SANTO ANTÔNIO (Pov. Alto Flecha)", director: "VALDIRA SANTOS PAIVA" },
+  { name: "SÃO FRANCISCO DE ASSIS", director: "WILLIAM SANTOS DA SILVA" },
+  { name: "SÃO PEDRO I E CRECHE", director: "WILSON ALVES DOS SANTOS" },
+  { name: "TERRA LIVRE", director: "LAIRES PRISCILA DA SILVA MOURA" },
+  { name: "VILA NOVA", director: "MARIANA DE ABREU REGO" },
+  { name: "CASA FAMILIAR RURAL- PADRE JOSINO TAVARES", director: "MARIA DA LUZ SOUSA ESTÁCIO" },
+  // INDÍGENAS
+  { name: "BILINGUE GUAJAJARA", director: "CILENE GUAJAJARA DE SOUSA" },
+  { name: "TENTEHAR", director: "MARILENE VIANA GUAJAJARA" },
+  { name: "ZEMU E HAW TAKWAR TYW", director: "MARIA JOSÉ GUAJAJARA OLIVEIRA" },
+  { name: "ZEMU' E HAW YWY XIGUHU", director: "ANTÔNIA GATINHO GUAJAJARA" },
+  { name: "ZEMU' E HAW MAINUMY ZU", director: "JOSÉ CARLOS VIANA GUAJAJARA" },
+  { name: "ZEMU E HAW TENTEHAR ZANUAR E ANEXO", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }
+];
+
+const CATALOG = [
+  { name: "Detergente neutro 500ml", unit: "Unidade", cat: "consumo" },
+  { name: "Água sanitária 1L",       unit: "Litro",   cat: "consumo" },
+  { name: "Desinfetante 2L",         unit: "Litro",   cat: "consumo" },
+  { name: "Sabão em barra",          unit: "Unidade", cat: "consumo" },
+  { name: "Papel higiênico",         unit: "Fardo",   cat: "consumo" },
+  { name: "Álcool 70% 1L",           unit: "Litro",   cat: "consumo" },
+  { name: "Vassoura de palha",       unit: "Unidade", cat: "consumo" },
+  { name: "Saco de lixo 50L",        unit: "Pacote",  cat: "consumo" },
+  { name: "Papel A4 (resma)",        unit: "Caixa",   cat: "consumo" },
+  { name: "Caneta esferográfica azul", unit: "Caixa", cat: "consumo" },
+  { name: "Cartucho de impressora",  unit: "Unidade", cat: "consumo" },
+  { name: "Copo descartável 200ml",  unit: "Pacote",  cat: "consumo" },
+  { name: "Guardanapo de papel",     unit: "Pacote",  cat: "consumo" },
+  { name: "Botijão de gás 13kg",     unit: "Unidade", cat: "consumo" },
+  { name: "Cadeira universitária",   unit: "Unidade", cat: "permanente" },
+  { name: "Birô / mesa de escritório", unit: "Unidade", cat: "permanente" },
+  { name: "Armário de aço",          unit: "Unidade", cat: "permanente" },
+  { name: "Ventilador de parede",    unit: "Unidade", cat: "permanente" },
+];
+
+let state = {
+  school: "", manager: "", portaria: "", memoNumber: "001", category: "", items: [], solicitacao: "", detalhe: ""
+};
+
+const $ = (id) => document.getElementById(id);
+
+function init(){
+  const schoolSelect = $("schoolSelect");
+  SCHOOLS.forEach(s => { const opt = document.createElement("option"); opt.value = s.name; opt.textContent = s.name; schoolSelect.appendChild(opt); });
+
+  renderCatalogSelect(); bindEvents(); updateProgress();
+}
+
+function bindEvents(){
+  $("schoolSelect").addEventListener("change", e => {
+    state.school = e.target.value;
+    const s = SCHOOLS.find(s => s.name === state.school);
+    $("managerInput").value = s ? s.director : ""; state.manager = s ? s.director : "";
+    updateProgress();
+  });
+  $("managerInput").addEventListener("input", e => { state.manager = e.target.value; updateProgress(); });
+  $("portariaInput").addEventListener("input", e => { state.portaria = e.target.value; updateProgress(); });
+  $("memoNumberInput").addEventListener("input", e => { state.memoNumber = e.target.value; });
+  
+  $("categorySelect").addEventListener("change", e => {
+    if (state.items.length > 0){
+      e.target.value = state.category; 
+      alert("Remova os itens antes de trocar de categoria."); return;
+    }
+    state.category = e.target.value;
+    renderCatalogSelect(); updateProgress();
+  });
+  
+  $("addCatalogItemBtn").addEventListener("click", onAddCatalogItem);
+  $("addCustomItemBtn").addEventListener("click", onAddCustomItem);
+  
+  $("solicitacaoInput").addEventListener("input", e => { state.solicitacao = e.target.value; updateProgress(); });
+  $("detalheInput").addEventListener("input", e => { state.detalhe = e.target.value; updateProgress(); });
+  
+  $("clearFormBtn").addEventListener("click", () => { if(confirm("Limpar tudo?")) location.reload(); });
+  
+  $("generateWordBtn").addEventListener("click", processWord);
+}
+
+function renderCatalogSelect(){
+  const sel = $("catalogSelect"); sel.innerHTML = "<option value=''>Selecione um item do catálogo…</option>";
+  CATALOG.filter(c => state.category === "" || c.cat === state.category).forEach((item) => {
+    const opt = document.createElement("option"); opt.value = item.name; opt.dataset.unit = item.unit;
+    opt.textContent = `${item.name}`; sel.appendChild(opt);
+  });
+}
+
+function onAddCatalogItem(){
+  const sel = $("catalogSelect");
+  if (!sel.value){ return; }
+  const unit = sel.options[sel.selectedIndex].dataset.unit;
+  const qty = parseInt($("catalogQty").value) || 1;
+  state.items.push({ name: sel.value, unit: unit, qty });
+  sel.value = ""; $("catalogQty").value = 1; renderItemsTable(); updateProgress();
+}
+
+function onAddCustomItem(){
+  const name = $("customName").value.trim();
+  if (!name){ return; }
+  state.items.push({ name, unit: $("customUnit").value, qty: parseInt($("customQty").value) || 1 });
+  $("customName").value = ""; $("customQty").value = 1; renderItemsTable(); updateProgress();
+}
+
+function removeItem(idx){ state.items.splice(idx, 1); renderItemsTable(); updateProgress(); }
+function updateItemQty(idx, val){ state.items[idx].qty = parseInt(val) > 0 ? parseInt(val) : 1; updateProgress(); }
+
+function renderItemsTable(){
+  const wrap = $("itemsTableWrap"); const body = $("itemsTableBody"); body.innerHTML = "";
+  if (state.items.length === 0){ wrap.classList.add("hidden"); $("categoryLockedNote").classList.add("hidden"); return; }
+  wrap.classList.remove("hidden"); $("categoryLockedNote").classList.remove("hidden");
+  state.items.forEach((it, idx) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${it.name}</td><td>${it.unit}</td>
+      <td><input type="number" min="1" value="${it.qty}" class="!w-20 !py-1" onchange="updateItemQty(${idx}, this.value)"></td>
+      <td class="text-right"><button onclick="removeItem(${idx})" class="text-[var(--danger)] text-xs font-bold uppercase hover:underline">Remover</button></td>`;
+    body.appendChild(tr);
+  });
+}
+
+function updateProgress(){
+  const s1 = state.school && state.manager && state.portaria;
+  const s2 = !!state.category;
+  const isService = state.category === 'servico';
+  let s3 = false;
+
+  if (s2) {
+      $("noCategoryNote").classList.add("hidden");
+      if (isService) {
+          $("itemPickerBlock").classList.add("hidden");
+          $("serviceFieldsBlock").classList.remove("hidden");
+          $("step3Title").textContent = "Detalhes do Serviço";
+          s3 = state.solicitacao.trim().length > 0 && state.detalhe.trim().length > 0;
+      } else {
+          $("itemPickerBlock").classList.remove("hidden");
+          $("serviceFieldsBlock").classList.add("hidden");
+          $("step3Title").textContent = "Itens Solicitados";
+          s3 = state.items.length > 0;
+      }
+  } else {
+      $("noCategoryNote").classList.remove("hidden");
+      $("itemPickerBlock").classList.add("hidden");
+      $("serviceFieldsBlock").classList.add("hidden");
+  }
+
+  const el1 = $("stepBadge1"); el1.classList.remove("done"); if(s1) el1.classList.add("done");
+  const el2 = $("stepBadge2"); el2.classList.remove("done"); if(s2) el2.classList.add("done");
+  const el3 = $("stepBadge3"); el3.classList.remove("done"); if(s3) el3.classList.add("done");
+
+  $("generateWordBtn").disabled = !(s1 && s2 && s3);
+}
+
+async function processWord() {
+  const isService = state.category === 'servico';
+  const fileName = isService ? 'MODELO_MEMORANDO_SERVICOS.docx' : 'MODELO_MEMORANDO_PRODUTOS.docx';
+  
+  try {
+    const response = await fetch(fileName);
+    if (!response.ok) throw new Error("Arquivo não encontrado.");
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const zip = new PizZip(arrayBuffer);
+    const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+    const h = new Date();
+    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    
+    let limpo = $("schoolSelect").value.replace(/E\.M\.E\.B\.\s*/gi, '').replace(/EMEB\s*/gi, '').replace(/I\.E\.I\s*/gi, '').replace(/Prof\.\s*/gi, '').replace(/Cônego\s*/gi, '').replace(/Dom\s*/gi, '').replace(/Professora\s*/gi, '');
+    let palavras = limpo.split(/[\s\(\)]+/);
+    let sigla = "";
+    palavras.forEach(p => {
+      if (!['de', 'da', 'do', 'das', 'dos', 'e', '-'].includes(p.toLowerCase()) && p.length > 0) {
+        sigla += p[0].toUpperCase();
+      }
+    });
+
+    const assuntoTxt = state.category === 'consumo' ? 'MATERIAIS DE CONSUMO' : state.category === 'permanente' ? 'MATERIAIS PERMANENTES' : $("solicitacaoInput").value.toUpperCase();
+
+    const itensWord = state.items.map((it, idx) => ({
+      NUM: String(idx + 1).padStart(2, '0'),
+      PRODUTO: it.name.toUpperCase(),
+      QTD: `${String(it.qty).padStart(2, '0')} ${it.unit.toUpperCase()}${it.qty > 1 && !it.unit.toLowerCase().endsWith('s') ? 'S' : ''}`
+    }));
+
+    doc.render({
+      "NÚMERO MEMORANDO": $("memoInput").value,
+      "SIGLA ESCOLA": sigla,
+      "DIA": h.getDate().toString().padStart(2,'0'),
+      "MÊS": meses[h.getMonth()],
+      "NOME DA ESCOLA": $("schoolSelect").value,
+      "NOME GESTOR(A)": $("managerInput").value.toUpperCase(),
+      "NUMERO DE PORTARIA": $("portariaInput").value,
+      "SOLICITAÇÃO": assuntoTxt,
+      "SOLICITAÇÃO DESEJADA": $("solicitacaoInput").value,
+      "DETALHE PARA SOLICITAÇÃO": $("detalheInput").value,
+      "itens": itensWord
+    });
+
+    const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    saveAs(out, `Memo_${sigla}_${$("memoInput").value}.docx`);
+    
+  } catch (error) {
+    alert("ERRO: O navegador bloqueou o carregamento do arquivo modelo por segurança. Quando esse sistema estiver hospedado, funcionará perfeitamente. Verifique os nomes dos arquivos na pasta: MODELO_MEMORANDO_SERVICOS.docx e MODELO_MEMORANDO_PRODUTOS.docx");
+    console.error(error);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
