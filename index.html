@@ -69,7 +69,7 @@
     <div class="flex items-center gap-2 text-sm text-[var(--ink-soft)] flex-wrap px-2">
       <span id="stepBadge1" class="step-badge">1</span> Identificação <span class="mx-1 text-[var(--line)]">—</span>
       <span id="stepBadge2" class="step-badge">2</span> Categoria <span class="mx-1 text-[var(--line)]">—</span>
-      <span id="stepBadge3" class="step-badge">3</span> Itens / Serviços
+      <span id="stepBadge3" class="step-badge">3</span> Solicitações
     </div>
 
     <!-- STEP 1: Identificação -->
@@ -140,16 +140,6 @@
 
       <div id="itemPickerBlock" class="hidden space-y-4">
         
-        <!-- Bloco Exclusivo para T.I. (Texto do Memorando) -->
-        <div id="tiTextVarsBlock" class="hidden p-4 bg-indigo-50/50 border border-indigo-100 rounded-lg mb-4 space-y-3">
-          <p class="text-xs font-bold text-indigo-800 uppercase tracking-wide">Configuração do Texto do Memorando de T.I.</p>
-          <div class="grid sm:grid-cols-3 gap-3">
-            <div><label class="field-label">Serviço (Ex: TROCA)</label><input type="text" id="tiServico" value="MANUTENÇÃO / SUPORTE"></div>
-            <div><label class="field-label">Ligação (Ex: DO, DE)</label><input type="text" id="tiPrep" value="DE"></div>
-            <div><label class="field-label">Aparelho (Ex: TONER)</label><input type="text" id="tiAparelho" value="EQUIPAMENTOS DE T.I."></div>
-          </div>
-        </div>
-
         <div class="grid sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
           <div class="w-full">
             <label class="field-label">Buscar no catálogo</label>
@@ -177,21 +167,21 @@
           </div>
         </div>
 
-        <!-- Campo de Modelo de Impressora Obrigatório para Toner/Tinta -->
         <div id="tiModelBlock" class="hidden">
-          <label class="field-label text-[var(--danger)]">Marca e Modelo da Impressora (Obrigatório para Tinta/Toner)*</label>
+          <label class="field-label text-[var(--danger)]">Marca e Modelo da Impressora / Scanner (Obrigatório)*</label>
           <input type="text" id="tiModelInput" class="mt-1 border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]" placeholder="Ex: HP LaserJet Pro M404">
         </div>
 
-        <button id="addCatalogItemBtn" class="btn btn-primary w-full sm:w-auto">Adicionar Item à Tabela</button>
+        <button id="addCatalogItemBtn" class="btn btn-primary w-full sm:w-auto">Adicionar à Tabela</button>
 
         <details class="pt-2">
-          <summary class="text-sm font-semibold text-[var(--navy)] cursor-pointer select-none">+ Adicionar item avulso (fora do catálogo)</summary>
+          <summary class="text-sm font-semibold text-[var(--navy)] cursor-pointer select-none">+ Adicionar Serviço / Produto Avulso</summary>
           <div class="mt-3 grid sm:grid-cols-4 gap-3 items-end">
             <div class="sm:col-span-2">
-              <label class="field-label">Nome do Produto/Serviço</label>
-              <input id="customName" type="text" class="mt-1">
+              <label class="field-label">Descrição do Pedido</label>
+              <input id="customName" type="text" class="mt-1" placeholder="Ex: Conserto de tomada">
             </div>
+            
             <div id="customColorFieldBlock" class="hidden">
               <label class="field-label">Cor</label>
               <select id="customColor" class="mt-1">
@@ -199,31 +189,30 @@
                 <option value="Azul">Azul</option>
                 <option value="Preto">Preto</option>
                 <option value="Vermelho">Vermelho</option>
-                <option value="Verde">Verde</option>
-                <option value="Amarelo">Amarelo</option>
-                <option value="Branco">Branco</option>
               </select>
             </div>
-            <div>
+            
+            <div id="customUnitBlock">
               <label class="field-label">Unidade</label>
               <select id="customUnit" class="mt-1">
-                <option>Unidade</option><option>Serviço</option><option>Caixa</option><option>Fardo</option>
+                <option>Unidade</option><option>Caixa</option><option>Fardo</option>
                 <option>Litro</option><option>Pacote</option><option>Rolo</option><option>Resma</option>
                 <option>Garrafão</option><option>Botijão</option><option>Toner</option><option>Refil</option>
               </select>
             </div>
+            
             <div>
               <label class="field-label">Quantidade</label>
               <input id="customQty" type="number" min="1" value="1" class="mt-1">
             </div>
           </div>
-          <button id="addCustomItemBtn" class="btn btn-ghost mt-3">Adicionar item avulso</button>
+          <button id="addCustomItemBtn" class="btn btn-ghost mt-3">Adicionar pedido avulso</button>
         </details>
 
         <div id="itemsTableWrap" class="hidden pt-2">
           <table class="items-table w-full border border-[var(--line)] rounded-lg overflow-hidden">
             <thead class="bg-[var(--surface-muted)] text-left text-[var(--ink-soft)] uppercase text-[11px] tracking-wide">
-              <tr><th>Item / Serviço</th><th>Unidade</th><th>Qtd.</th><th></th></tr>
+              <tr><th>Item / Descrição</th><th>Unidade</th><th>Qtd.</th><th></th></tr>
             </thead>
             <tbody id="itemsTableBody"></tbody>
           </table>
@@ -539,7 +528,6 @@ function bindEvents(){
     }
     state.category = e.target.value;
     
-    // Mostra/Esconde cores apenas para Expediente
     if(state.category === 'expediente') {
       $("colorFieldBlock").classList.remove("hidden");
       $("customColorFieldBlock").classList.remove("hidden");
@@ -549,11 +537,10 @@ function bindEvents(){
       $("catalogColor").value = ""; $("customColor").value = "";
     }
 
-    // Mostra/Esconde variáveis de texto T.I.
-    if(state.category === 'ti') {
-      $("tiTextVarsBlock").classList.remove("hidden");
+    if(state.category === 'servico' || state.category === 'ti') {
+      $("customUnitBlock").classList.add("hidden");
     } else {
-      $("tiTextVarsBlock").classList.add("hidden");
+      $("customUnitBlock").classList.remove("hidden");
     }
 
     checkTiModelRequirement();
@@ -572,9 +559,9 @@ function bindEvents(){
 function checkTiModelRequirement() {
   const isTI = state.category === 'ti';
   const val = $("catalogSelect").value.toLowerCase();
-  const isTonerTinta = val.includes("toner") || val.includes("tinta");
+  const needsModel = val.includes("toner") || val.includes("tinta") || val.includes("impressora") || val.includes("scanner");
   
-  if (isTI && isTonerTinta) {
+  if (isTI && needsModel) {
     $("tiModelBlock").classList.remove("hidden");
   } else {
     $("tiModelBlock").classList.add("hidden");
@@ -598,10 +585,12 @@ function onAddCatalogItem(){
   const qty = parseInt($("catalogQty").value) || 1;
   const color = $("catalogColor").value;
   
-  const isTonerTinta = name.toLowerCase().includes("toner") || name.toLowerCase().includes("tinta");
-  if (state.category === 'ti' && isTonerTinta) {
+  const valLower = name.toLowerCase();
+  const needsModel = valLower.includes("toner") || valLower.includes("tinta") || valLower.includes("impressora") || valLower.includes("scanner");
+  
+  if (state.category === 'ti' && needsModel) {
     const model = $("tiModelInput").value.trim();
-    if (!model) { alert("Para Toners ou Tintas, é obrigatório preencher a Marca/Modelo da impressora."); return; }
+    if (!model) { alert("Para este item de T.I. (Impressora, Scanner, Toner, Tinta), é obrigatório preencher a Marca/Modelo."); return; }
     name += ` (${model})`;
   }
 
@@ -621,7 +610,12 @@ function onAddCustomItem(){
   const color = $("customColor").value;
   if (color && state.category === 'expediente') { name += ` - ${color.toUpperCase()}`; }
   
-  state.items.push({ name, unit: $("customUnit").value, qty: parseInt($("customQty").value) || 1 });
+  let unit = $("customUnit").value;
+  if (state.category === 'servico' || state.category === 'ti') {
+      unit = "Serviço";
+  }
+
+  state.items.push({ name, unit: unit, qty: parseInt($("customQty").value) || 1 });
   
   $("customName").value = ""; $("customQty").value = 1; $("customColor").value = "";
   renderItemsTable(); updateProgress();
@@ -678,7 +672,6 @@ async function processWord() {
   const isTI = state.category === 'ti';
   let fileName = '';
   
-  // Agora apenas TI puxa um doc diferente. Tudo que vai pra tabela usa CURTO/GRANDE
   if (isTI) {
       fileName = 'MODELO_MEMORANDO_TI.docx';
   } else {
@@ -724,16 +717,31 @@ async function processWord() {
       const u = it.unit || 'UNIDADE';
       const qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
       
-      // Mapeamos para APARELHO também para garantir que a tabela do doc TI funcione
       return { NUM: numStr, PRODUTO: prodStr, PRODUTOS: prodStr, APARELHO: prodStr, QTD: qtdStr, QUANTIDADE: qtdStr };
     });
 
+    // SISTEMA INTELIGENTE DE PALAVRAS DO T.I.
+    let tiServico = "MANUTENÇÃO / SUPORTE";
+    let tiDao = "EM";
+    let tiAparelho = "EQUIPAMENTOS DE T.I.";
+
+    if (isTI && state.items.length > 0) {
+        let firstItemName = state.items[0].name.toLowerCase();
+        if (firstItemName.includes("cpu")) {
+            tiServico = "MANUTENÇÃO"; tiDao = "DA"; tiAparelho = "CPU";
+        } else if (firstItemName.includes("impressora")) {
+            tiServico = "MANUTENÇÃO"; tiDao = "DA"; tiAparelho = "IMPRESSORA";
+        } else if (firstItemName.includes("scanner")) {
+            tiServico = "MANUTENÇÃO"; tiDao = "DO"; tiAparelho = "SCANNER";
+        } else if (firstItemName.includes("toner")) {
+            tiServico = "TROCA"; tiDao = "DE"; tiAparelho = "TONER";
+        } else if (firstItemName.includes("tinta")) {
+            tiServico = "REABASTECIMENTO"; tiDao = "DE"; tiAparelho = "TINTA";
+        }
+    }
+
     let espacosExtras = "";
-    if (!isTI && state.items.length <= 7) {
-        const entersNecessarios = 7 - state.items.length;
-        espacosExtras = "\n".repeat(entersNecessarios);
-    } else if (isTI && state.items.length <= 7) {
-        // Aplica espaço extra no TI também se for curto
+    if (state.items.length <= 7) {
         const entersNecessarios = 7 - state.items.length;
         espacosExtras = "\n".repeat(entersNecessarios);
     }
@@ -748,9 +756,9 @@ async function processWord() {
       "NUMERO DE PORTARIA": state.portaria,
       "SOLICITAÇÃO": assuntoTxt,
       "ESPACO_EXTRA": espacosExtras,
-      "SERVICO": $("tiServico") ? $("tiServico").value.toUpperCase() : "MANUTENÇÃO",
-      "DA(O)": $("tiPrep") ? $("tiPrep").value.toUpperCase() : "DE",
-      "APARELHO": $("tiAparelho") ? $("tiAparelho").value.toUpperCase() : "EQUIPAMENTOS DE T.I.",
+      "SERVICO": tiServico,
+      "DA(O)": tiDao,
+      "APARELHO": tiAparelho,
       "itens": itensWord
     });
 
