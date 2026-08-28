@@ -89,7 +89,6 @@
             </div>
           </div>
           <div id="schoolDropdownList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
-          
           <div id="variantSelectorBlock" class="hidden mt-3 p-3 bg-[var(--surface-muted)] rounded-lg border border-[var(--line)]"></div>
         </div>
 
@@ -159,16 +158,16 @@
             </select>
           </div>
           
-          <div class="flex gap-2">
-            <div class="w-20">
-              <label class="field-label">Qtd.</label>
-              <input id="catalogQty" type="number" min="1" value="1" class="mt-1">
+          <div class="flex gap-2 flex-1 sm:w-48 w-full">
+            <div class="w-full">
+              <label class="field-label" id="catalogQtyLabel">Qtd.</label>
+              <input id="catalogQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
           </div>
         </div>
 
         <div id="tiModelBlock" class="hidden">
-          <label class="field-label text-[var(--danger)]">Marca e Modelo da Impressora / Scanner (Obrigatório)*</label>
+          <label class="field-label text-[var(--danger)]" id="tiModelLabel">Marca e Modelo do Equipamento (Obrigatório, exceto CPU)*</label>
           <input type="text" id="tiModelInput" class="mt-1 border-[var(--danger)] focus:border-[var(--danger)] focus:ring-[var(--danger)]" placeholder="Ex: HP LaserJet Pro M404">
         </div>
 
@@ -178,8 +177,8 @@
           <summary class="text-sm font-semibold text-[var(--navy)] cursor-pointer select-none">+ Adicionar Serviço / Produto Avulso</summary>
           <div class="mt-3 grid sm:grid-cols-4 gap-3 items-end">
             <div class="sm:col-span-2">
-              <label class="field-label">Descrição do Pedido</label>
-              <input id="customName" type="text" class="mt-1" placeholder="Ex: Conserto de tomada">
+              <label class="field-label" id="customNameLabel">Nome do Produto/Serviço</label>
+              <input id="customName" type="text" class="mt-1">
             </div>
             
             <div id="customColorFieldBlock" class="hidden">
@@ -201,9 +200,9 @@
               </select>
             </div>
             
-            <div>
-              <label class="field-label">Quantidade</label>
-              <input id="customQty" type="number" min="1" value="1" class="mt-1">
+            <div class="w-full">
+              <label class="field-label" id="customQtyLabel">Quantidade</label>
+              <input id="customQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
           </div>
           <button id="addCustomItemBtn" class="btn btn-ghost mt-3">Adicionar pedido avulso</button>
@@ -212,7 +211,7 @@
         <div id="itemsTableWrap" class="hidden pt-2">
           <table class="items-table w-full border border-[var(--line)] rounded-lg overflow-hidden">
             <thead class="bg-[var(--surface-muted)] text-left text-[var(--ink-soft)] uppercase text-[11px] tracking-wide">
-              <tr><th>Item / Descrição</th><th>Unidade</th><th>Qtd.</th><th></th></tr>
+              <tr><th>Item / Descrição</th><th>Unidade</th><th id="tableQtyHeader">Qtd.</th><th></th></tr>
             </thead>
             <tbody id="itemsTableBody"></tbody>
           </table>
@@ -232,51 +231,15 @@
 
 <script>
 const SCHOOLS = [
-  { 
-    name: "EMEB ADROALDO ALVES MATOS", 
-    variants: [
-      { label: "Regular", suffix: "", director: "ANTONIO ALMEIDA BEZERRA" },
-      { label: "EJA", suffix: " - EJA", director: "GRACILEIA SOUSA DOS ANJOS" }
-    ]
-  },
+  { name: "EMEB ADROALDO ALVES MATOS", variants: [{ label: "Regular", suffix: "", director: "ANTONIO ALMEIDA BEZERRA" }, { label: "EJA", suffix: " - EJA", director: "GRACILEIA SOUSA DOS ANJOS" }] },
   { name: "EMEB DR ANTONIO MUNIZ ALVES", director: "ELISÂNGELA LIMA RODRIGUES" },
-  { 
-    name: "EMEB FREI ANTONIO SINIBALDI", 
-    variants: [
-      { label: "Regular", suffix: "", director: "JOÃO BORBA COSTA" },
-      { label: "EJA", suffix: " - EJA", director: "THALLISON SOUSA PINTO" }
-    ]
-  },
-  { 
-    name: "EMEB NEY BRAGA", 
-    variants: [
-      { label: "Regular", suffix: "", director: "ELTON ALVES MEMÓRIA" },
-      { label: "EJA", suffix: " - EJA", director: "ANTONIA LAURINDA FORTALEZA MOTA RODRIGUES" }
-    ]
-  },
+  { name: "EMEB FREI ANTONIO SINIBALDI", variants: [{ label: "Regular", suffix: "", director: "JOÃO BORBA COSTA" }, { label: "EJA", suffix: " - EJA", director: "THALLISON SOUSA PINTO" }] },
+  { name: "EMEB NEY BRAGA", variants: [{ label: "Regular", suffix: "", director: "ELTON ALVES MEMÓRIA" }, { label: "EJA", suffix: " - EJA", director: "ANTONIA LAURINDA FORTALEZA MOTA RODRIGUES" }] },
   { name: "EMEB PROFESSORA DINARE FEITOSA", director: "ANTÔNIA ALCIANE B. DOS SANTOS" },
-  { 
-    name: "EMEB RAIMUNDO MEIRELES PINTO", 
-    variants: [
-      { label: "Regular", suffix: "", director: "SANDRA MARIA PEREIRA DE AQUINO REGO" },
-      { label: "EJA", suffix: " - EJA", director: "IRIS GONÇALVES DA SILVA" }
-    ]
-  },
+  { name: "EMEB RAIMUNDO MEIRELES PINTO", variants: [{ label: "Regular", suffix: "", director: "SANDRA MARIA PEREIRA DE AQUINO REGO" }, { label: "EJA", suffix: " - EJA", director: "IRIS GONÇALVES DA SILVA" }] },
   { name: "EMEB ROSILDA MARTINS DE OLIVEIRA", director: "CRISTINA MATOS DE CARVALHO" },
-  { 
-    name: "EMEB VEREADOR ANTONIO FEITOSA PRIMO", 
-    variants: [
-      { label: "Regular", suffix: "", director: "CONCEIÇÃO" },
-      { label: "EJA", suffix: " - EJA", director: "FRANCISCA GONÇALVES" }
-    ]
-  },
-  { 
-    name: "I.E.I ADROALDO ALVES MATOS", 
-    variants: [
-      { label: "Regular", suffix: "", director: "DALLYANNA SOARES TRINDADE" },
-      { label: "Anexo", suffix: " E ANEXO", director: "DALLYANNA SOARES TRINDADE" }
-    ]
-  },
+  { name: "EMEB VEREADOR ANTONIO FEITOSA PRIMO", variants: [{ label: "Regular", suffix: "", director: "CONCEIÇÃO" }, { label: "EJA", suffix: " - EJA", director: "FRANCISCA GONÇALVES" }] },
+  { name: "I.E.I ADROALDO ALVES MATOS", variants: [{ label: "Regular", suffix: "", director: "DALLYANNA SOARES TRINDADE" }, { label: "Anexo", suffix: " E ANEXO", director: "DALLYANNA SOARES TRINDADE" }] },
   { name: "I.E.I MARIA STELA FERREIRA DE ARAÚJO", director: "ELANE LINS BARBOSA" },
   { name: "BIBLIOTECA MUN. PROF. RAIMUNDA BEZERRA", director: "CINTHIA VARÃO DA SILVA" },
   { name: "PROJETO ALFABETIZA - BOM JARDIM", director: "CHIRLE SILVA DUARTE" },
@@ -299,13 +262,7 @@ const SCHOOLS = [
   { name: "DOM VALMIR", director: "JOSÉ DE ALMEIDA SOUSA" },
   { name: "DR. ANTONIO DINO", director: "ILDEILDE DE SOUSA COSTA" },
   { name: "ELZAMIR DO NASCIMENTO SOUSA", director: "LAURA ALVES CARVALHO" },
-  { 
-    name: "DR. MÁRIO HENRIQUE SIMONSEN", 
-    variants: [
-      { label: "Regular", suffix: "", director: "ANA MARIA BETENCOURTE VIANA" },
-      { label: "Anexo", suffix: " E ANEXO", director: "ANA MARIA BETENCOURTE VIANA" }
-    ]
-  },
+  { name: "DR. MÁRIO HENRIQUE SIMONSEN", variants: [{ label: "Regular", suffix: "", director: "ANA MARIA BETENCOURTE VIANA" }, { label: "Anexo", suffix: " E ANEXO", director: "ANA MARIA BETENCOURTE VIANA" }] },
   { name: "DR. NUNES FREIRE", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
   { name: "DUQUE DE CAXIAS", director: "FRANCISCO VAGNER COSTA FERREIRA" },
   { name: "ESTER DE FIGUEIRA FERRAZ", director: "ILDEILDE DE SOUSA COSTA" },
@@ -324,13 +281,7 @@ const SCHOOLS = [
   { name: "NAGIB HAICKEL", director: "JUCIVÂNIA SILVA SANTOS" },
   { name: "NOSSA SENHORA DE FÁTIMA", director: "LUIS CARLOS ALMEIDA SOARES" },
   { name: "NOSSA SENHORA DOS ANJOS", director: "ROSINALVA DA CONCEIÇÃO R. SANTOS" },
-  { 
-    name: "OSVALDO CRUZ", 
-    variants: [
-      { label: "Regular", suffix: "", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
-      { label: "Anexo", suffix: " E ANEXO", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" }
-    ]
-  },
+  { name: "OSVALDO CRUZ", variants: [{ label: "Regular", suffix: "", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" }, { label: "Anexo", suffix: " E ANEXO", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" }] },
   { name: "PEDRO NEIVA DE SANTANA", director: "LAURA ALVES CARVALHO" },
   { name: "PRINCESA ISABEL", director: "LUIS CARLOS ALMEIDA SOARES" },
   { name: "RAIMUNDO BENEDITO DUARTE NEVES", director: "MARIA AUCILEIDE DE C. ROCHA" },
@@ -359,13 +310,7 @@ const SCHOOLS = [
   { name: "LAGO VERDE", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
   { name: "MARIA DO SOCORRO OTÁVIO DE OLIVEIRA", director: "MARIANA DE ABREU REGO" },
   { name: "MARLY ANDRÉ", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
-  { 
-    name: "NOSSA SENHORA APARECIDA", 
-    variants: [
-      { label: "Regular", suffix: "", director: "GILDETE FERREIRA DO NASCIMENTO" },
-      { label: "Anexo", suffix: " E ANEXO", director: "GILDETE FERREIRA DO NASCIMENTO" }
-    ]
-  },
+  { name: "NOSSA SENHORA APARECIDA", variants: [{ label: "Regular", suffix: "", director: "GILDETE FERREIRA DO NASCIMENTO" }, { label: "Anexo", suffix: " E ANEXO", director: "GILDETE FERREIRA DO NASCIMENTO" }] },
   { name: "PADRE NEWTON INÁCIO PEREIRA", director: "VALDIRA SANTOS PAIVA" },
   { name: "PEDREIRA VITAL", director: "WILLIAM SANTOS DA SILVA" },
   { name: "ROSA CASTRO", director: "VALDIRA SANTOS PAIVA" },
@@ -386,13 +331,7 @@ const SCHOOLS = [
   { name: "ZEMU E HAW TAKWAR TYW", director: "MARIA JOSÉ GUAJAJARA OLIVEIRA" },
   { name: "ZEMU' E HAW YWY XIGUHU", director: "ANTÔNIA GATINHO GUAJAJARA" },
   { name: "ZEMU' E HAW MAINUMY ZU", director: "JOSÉ CARLOS VIANA GUAJAJARA" },
-  { 
-    name: "ZEMU E HAW TENTEHAR ZANUAR", 
-    variants: [
-      { label: "Regular", suffix: "", director: "MÁRCIA REGINA SOUSA GUAJAJARA" },
-      { label: "Anexo", suffix: " E ANEXO", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }
-    ]
-  }
+  { name: "ZEMU E HAW TENTEHAR ZANUAR", variants: [{ label: "Regular", suffix: "", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }, { label: "Anexo", suffix: " E ANEXO", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }] }
 ];
 
 const CATALOG = [
@@ -527,7 +466,9 @@ function bindEvents(){
       alert("Remova todos os itens da tabela antes de trocar de categoria."); return;
     }
     state.category = e.target.value;
+    const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
     
+    // Mostra Cores só pra Expediente
     if(state.category === 'expediente') {
       $("colorFieldBlock").classList.remove("hidden");
       $("customColorFieldBlock").classList.remove("hidden");
@@ -537,35 +478,36 @@ function bindEvents(){
       $("catalogColor").value = ""; $("customColor").value = "";
     }
 
-    if(state.category === 'servico' || state.category === 'ti') {
+    // Transforma Quantidade em "Detalhes" para Serviços/TI
+    $("catalogQtyLabel").innerText = isSrvOrTi ? "DESCRIÇÃO / LOCAL" : "QTD.";
+    $("catalogQty").type = isSrvOrTi ? "text" : "number";
+    $("catalogQty").value = isSrvOrTi ? "" : "1";
+    $("catalogQty").placeholder = isSrvOrTi ? "Ex: Sala 01, ou 02 unidades" : "";
+
+    $("customQtyLabel").innerText = isSrvOrTi ? "DESCRIÇÃO / DETALHES" : "QUANTIDADE";
+    $("customQty").type = isSrvOrTi ? "text" : "number";
+    $("customQty").value = isSrvOrTi ? "" : "1";
+    $("customQty").placeholder = isSrvOrTi ? "Ex: Conserto da porta" : "";
+    $("customNameLabel").innerText = isSrvOrTi ? "NOME DO SERVIÇO" : "NOME DO PRODUTO";
+
+    if(isSrvOrTi) {
       $("customUnitBlock").classList.add("hidden");
+      $("tableQtyHeader").innerText = "DETALHES";
+      if(state.category === 'ti') { $("tiModelBlock").classList.remove("hidden"); }
+      else { $("tiModelBlock").classList.add("hidden"); }
     } else {
       $("customUnitBlock").classList.remove("hidden");
+      $("tableQtyHeader").innerText = "QTD.";
+      $("tiModelBlock").classList.add("hidden");
     }
 
-    checkTiModelRequirement();
-    renderCatalogSelect(); 
-    updateProgress();
+    renderCatalogSelect(); updateProgress();
   });
-  
-  $("catalogSelect").addEventListener("change", checkTiModelRequirement);
   
   $("addCatalogItemBtn").addEventListener("click", onAddCatalogItem);
   $("addCustomItemBtn").addEventListener("click", onAddCustomItem);
   $("clearFormBtn").addEventListener("click", () => { if(confirm("Limpar tudo?")) location.reload(); });
   $("generateWordBtn").addEventListener("click", processWord);
-}
-
-function checkTiModelRequirement() {
-  const isTI = state.category === 'ti';
-  const val = $("catalogSelect").value.toLowerCase();
-  const needsModel = val.includes("toner") || val.includes("tinta") || val.includes("impressora") || val.includes("scanner");
-  
-  if (isTI && needsModel) {
-    $("tiModelBlock").classList.remove("hidden");
-  } else {
-    $("tiModelBlock").classList.add("hidden");
-  }
 }
 
 function renderCatalogSelect(){
@@ -582,24 +524,25 @@ function onAddCatalogItem(){
   
   let name = sel.value;
   const unit = sel.options[sel.selectedIndex].dataset.unit;
-  const qty = parseInt($("catalogQty").value) || 1;
   const color = $("catalogColor").value;
   
-  const valLower = name.toLowerCase();
-  const needsModel = valLower.includes("toner") || valLower.includes("tinta") || valLower.includes("impressora") || valLower.includes("scanner");
+  const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  let qtyVal = $("catalogQty").value.trim();
+  if (isSrvOrTi && qtyVal === "") qtyVal = "-"; // Se não digitar nada no serviço, fica um traço
+  if (!isSrvOrTi && qtyVal === "") qtyVal = 1;
   
-  if (state.category === 'ti' && needsModel) {
+  const isCPU = name.toLowerCase().includes("cpu");
+  if (state.category === 'ti' && !isCPU) {
     const model = $("tiModelInput").value.trim();
-    if (!model) { alert("Para este item de T.I. (Impressora, Scanner, Toner, Tinta), é obrigatório preencher a Marca/Modelo."); return; }
+    if (!model) { alert("Por favor, preencha a Marca/Modelo do equipamento (Obrigatório, exceto CPU)."); return; }
     name += ` (${model})`;
   }
 
   if (color && state.category === 'expediente') { name += ` - ${color.toUpperCase()}`; }
   
-  state.items.push({ name: name, unit: unit, qty });
+  state.items.push({ name: name, unit: isSrvOrTi ? "Serviço" : unit, qty: qtyVal });
   
-  sel.value = ""; $("catalogQty").value = 1; $("catalogColor").value = ""; $("tiModelInput").value = "";
-  checkTiModelRequirement();
+  sel.value = ""; $("catalogQty").value = isSrvOrTi ? "" : 1; $("catalogColor").value = ""; $("tiModelInput").value = "";
   renderItemsTable(); updateProgress();
 }
 
@@ -607,31 +550,57 @@ function onAddCustomItem(){
   let name = $("customName").value.trim();
   if (!name) return;
   
+  const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  let qtyVal = $("customQty").value.trim();
+  if (isSrvOrTi && qtyVal === "") qtyVal = "-";
+  if (!isSrvOrTi && qtyVal === "") qtyVal = 1;
+  
   const color = $("customColor").value;
   if (color && state.category === 'expediente') { name += ` - ${color.toUpperCase()}`; }
   
-  let unit = $("customUnit").value;
-  if (state.category === 'servico' || state.category === 'ti') {
-      unit = "Serviço";
+  const isCPU = name.toLowerCase().includes("cpu");
+  if (state.category === 'ti' && !isCPU) {
+    const model = $("tiModelInput").value.trim();
+    if (!model) { alert("Por favor, preencha a Marca/Modelo do equipamento (Obrigatório, exceto CPU)."); return; }
+    name += ` (${model})`;
   }
 
-  state.items.push({ name, unit: unit, qty: parseInt($("customQty").value) || 1 });
+  let unit = isSrvOrTi ? "Serviço" : $("customUnit").value;
+  state.items.push({ name, unit: unit, qty: qtyVal });
   
-  $("customName").value = ""; $("customQty").value = 1; $("customColor").value = "";
+  $("customName").value = ""; $("customQty").value = isSrvOrTi ? "" : 1; $("customColor").value = ""; $("tiModelInput").value = "";
   renderItemsTable(); updateProgress();
 }
 
 function removeItem(idx){ state.items.splice(idx, 1); renderItemsTable(); updateProgress(); }
-function updateItemQty(idx, val){ state.items[idx].qty = parseInt(val) > 0 ? parseInt(val) : 1; updateProgress(); }
+
+function updateItemQty(idx, val){ 
+  const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  if (isSrvOrTi) {
+    state.items[idx].qty = val.trim();
+  } else {
+    state.items[idx].qty = parseInt(val) > 0 ? parseInt(val) : 1; 
+  }
+  updateProgress(); 
+}
 
 function renderItemsTable(){
   const wrap = $("itemsTableWrap"); const body = $("itemsTableBody"); body.innerHTML = "";
   if (state.items.length === 0){ wrap.classList.add("hidden"); return; }
   wrap.classList.remove("hidden");
+  
+  const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  
   state.items.forEach((it, idx) => {
     const tr = document.createElement("tr");
+    
+    // Campo editável na tabela muda dependendo se é texto ou número
+    const inputHtml = isSrvOrTi 
+      ? `<input type="text" value="${it.qty}" class="!w-full !py-1 text-xs" onchange="updateItemQty(${idx}, this.value)">`
+      : `<input type="number" min="1" value="${it.qty}" class="!w-20 !py-1" onchange="updateItemQty(${idx}, this.value)">`;
+
     tr.innerHTML = `<td>${it.name}</td><td>${it.unit}</td>
-      <td><input type="number" min="1" value="${it.qty}" class="!w-20 !py-1" onchange="updateItemQty(${idx}, this.value)"></td>
+      <td>${inputHtml}</td>
       <td class="text-right"><button onclick="removeItem(${idx})" class="text-[var(--danger)] text-xs font-bold uppercase hover:underline">Remover</button></td>`;
     body.appendChild(tr);
   });
@@ -670,6 +639,7 @@ function formatPlural(u, q) {
 
 async function processWord() {
   const isTI = state.category === 'ti';
+  const isSrv = state.category === 'servico';
   let fileName = '';
   
   if (isTI) {
@@ -699,30 +669,40 @@ async function processWord() {
     });
 
     let assuntoTxt = "";
-    switch(state.category) {
-        case 'limpeza': assuntoTxt = 'MATERIAIS DE LIMPEZA'; break;
-        case 'expediente': assuntoTxt = 'MATERIAIS DE EXPEDIENTE'; break;
-        case 'permanente': assuntoTxt = 'MATERIAIS PERMANENTES'; break;
-        case 'cozinha': assuntoTxt = 'UTENSÍLIOS DE COZINHA'; break;
-        case 'agua': assuntoTxt = 'FORNECIMENTO DE ÁGUA'; break;
-        case 'gas': assuntoTxt = 'FORNECIMENTO DE GÁS'; break;
-        case 'servico': assuntoTxt = 'SERVIÇOS DE MANUTENÇÃO'; break;
-        case 'ti': assuntoTxt = 'SERVIÇOS DE T.I.'; break;
+    if (isSrv || isTI) {
+        // Se for serviço ou T.I., o assunto vira automaticamente a solicitação do 1º item!
+        assuntoTxt = state.items[0].name.toUpperCase();
+    } else {
+        switch(state.category) {
+            case 'limpeza': assuntoTxt = 'MATERIAIS DE LIMPEZA'; break;
+            case 'expediente': assuntoTxt = 'MATERIAIS DE EXPEDIENTE'; break;
+            case 'permanente': assuntoTxt = 'MATERIAIS PERMANENTES'; break;
+            case 'cozinha': assuntoTxt = 'UTENSÍLIOS DE COZINHA'; break;
+            case 'agua': assuntoTxt = 'FORNECIMENTO DE ÁGUA'; break;
+            case 'gas': assuntoTxt = 'FORNECIMENTO DE GÁS'; break;
+        }
     }
 
     const itensWord = state.items.map((it, idx) => {
       const numStr = String(idx + 1).padStart(2, '0');
       const prodStr = (it.name || '').toUpperCase();
-      const q = it.qty || 1;
-      const u = it.unit || 'UNIDADE';
-      const qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
+      let qtdStr = "";
+      
+      // Se for Serviço ou TI, a coluna 'QUANTIDADE' do Word recebe o texto que você digitou
+      if (isSrv || isTI) {
+          qtdStr = String(it.qty).toUpperCase();
+      } else {
+          const q = parseInt(it.qty) || 1;
+          const u = it.unit || 'UNIDADE';
+          qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
+      }
       
       return { NUM: numStr, PRODUTO: prodStr, PRODUTOS: prodStr, APARELHO: prodStr, QTD: qtdStr, QUANTIDADE: qtdStr };
     });
 
-    // SISTEMA INTELIGENTE DE PALAVRAS DO T.I.
-    let tiServico = "MANUTENÇÃO / SUPORTE";
-    let tiDao = "EM";
+    // SISTEMA INVISÍVEL DE PALAVRAS DO T.I.
+    let tiServico = "MANUTENÇÃO";
+    let tiDao = "DE";
     let tiAparelho = "EQUIPAMENTOS DE T.I.";
 
     if (isTI && state.items.length > 0) {
@@ -735,8 +715,11 @@ async function processWord() {
             tiServico = "MANUTENÇÃO"; tiDao = "DO"; tiAparelho = "SCANNER";
         } else if (firstItemName.includes("toner")) {
             tiServico = "TROCA"; tiDao = "DE"; tiAparelho = "TONER";
-        } else if (firstItemName.includes("tinta")) {
+        } else if (firstItemName.includes("tinta") || firstItemName.includes("refil")) {
             tiServico = "REABASTECIMENTO"; tiDao = "DE"; tiAparelho = "TINTA";
+        } else {
+            // Se for um item avulso que ele inventou
+            tiServico = "REALIZAÇÃO"; tiDao = "DE"; tiAparelho = state.items[0].name.toUpperCase();
         }
     }
 
