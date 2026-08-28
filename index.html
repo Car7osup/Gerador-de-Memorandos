@@ -113,17 +113,16 @@
         <span class="step-badge">2</span>
         <h2 class="font-bold text-[var(--navy)]">Categoria do Memorando</h2>
       </div>
-      <select id="categorySelect">
-        <option value="">Selecione a categoria…</option>
-        <option value="limpeza">Material de Limpeza</option>
-        <option value="expediente">Material de Expediente</option>
-        <option value="cozinha">Utensílios de Cozinha</option>
-        <option value="permanente">Material Permanente</option>
-        <option value="agua">Solicitação de Água</option>
-        <option value="gas">Solicitação de Gás</option>
-        <option value="servico">Serviços / Manutenção Predial</option>
-        <option value="ti">Serviços de T.I. / Suporte</option>
-      </select>
+      
+      <div class="relative" id="categoryWrapper">
+        <div class="relative">
+          <input type="text" id="categoryInput" class="w-full pr-8 cursor-text" placeholder="Selecione a categoria..." autocomplete="off">
+          <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+          </div>
+        </div>
+        <div id="categoryList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
+      </div>
     </section>
 
     <!-- STEP 3: Itens ou Serviços -->
@@ -140,27 +139,30 @@
       <div id="itemPickerBlock" class="hidden space-y-4">
         
         <div class="grid sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
-          <div class="w-full">
+          <div class="w-full" id="catalogWrapper">
             <label class="field-label">Buscar no catálogo</label>
-            <select id="catalogSelect" class="mt-1"></select>
+            <div class="relative mt-1">
+              <input type="text" id="catalogInput" class="w-full pr-8 cursor-text" placeholder="Selecione um item..." autocomplete="off">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+            </div>
+            <div id="catalogList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
           </div>
           
-          <div id="colorFieldBlock" class="w-28 hidden">
+          <div id="colorFieldBlock" class="w-32 hidden">
             <label class="field-label">Cor</label>
-            <select id="catalogColor" class="mt-1">
-              <option value="">(Nenhuma)</option>
-              <option value="Azul">Azul</option>
-              <option value="Preto">Preto</option>
-              <option value="Vermelho">Vermelho</option>
-              <option value="Verde">Verde</option>
-              <option value="Amarelo">Amarelo</option>
-              <option value="Branco">Branco</option>
-            </select>
+            <div class="relative mt-1" id="catalogColorWrapper">
+              <input type="text" id="catalogColorInput" class="w-full pr-8 cursor-text" placeholder="Cor..." autocomplete="off">
+              <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+              </div>
+              <div id="catalogColorList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
+            </div>
           </div>
           
-          <div class="flex gap-2 flex-1 sm:w-48 w-full">
+          <div class="flex gap-2 flex-1 sm:w-32 w-full">
             <div class="w-full">
-              <!-- No catálogo a quantidade é SEMPRE número -->
               <label class="field-label" id="catalogQtyLabel">Qtd.</label>
               <input id="catalogQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
@@ -184,25 +186,27 @@
             
             <div id="customColorFieldBlock" class="hidden">
               <label class="field-label">Cor</label>
-              <select id="customColor" class="mt-1">
-                <option value="">(Nenhuma)</option>
-                <option value="Azul">Azul</option>
-                <option value="Preto">Preto</option>
-                <option value="Vermelho">Vermelho</option>
-              </select>
+              <div class="relative mt-1" id="customColorWrapper">
+                <input type="text" id="customColorInput" class="w-full pr-8 cursor-text" placeholder="Cor..." autocomplete="off">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="customColorList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
+              </div>
             </div>
             
             <div id="customUnitBlock">
               <label class="field-label">Unidade</label>
-              <select id="customUnit" class="mt-1">
-                <option>Unidade</option><option>Caixa</option><option>Fardo</option>
-                <option>Litro</option><option>Pacote</option><option>Rolo</option><option>Resma</option>
-                <option>Garrafão</option><option>Botijão</option><option>Toner</option><option>Refil</option>
-              </select>
+              <div class="relative mt-1" id="customUnitWrapper">
+                <input type="text" id="customUnitInput" class="w-full pr-8 cursor-text" placeholder="Unidade..." value="Unidade" autocomplete="off">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+                <div id="customUnitList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
+              </div>
             </div>
             
             <div class="w-full">
-              <!-- No avulso, pode virar texto (Descrição/Detalhes) dependendo da categoria -->
               <label class="field-label" id="customQtyLabel">Qtd.</label>
               <input id="customQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
@@ -241,7 +245,7 @@ const SCHOOLS = [
   { name: "EMEB RAIMUNDO MEIRELES PINTO", variants: [{ label: "Regular", suffix: "", director: "SANDRA MARIA PEREIRA DE AQUINO REGO" }, { label: "EJA", suffix: " - EJA", director: "IRIS GONÇALVES DA SILVA" }] },
   { name: "EMEB ROSILDA MARTINS DE OLIVEIRA", director: "CRISTINA MATOS DE CARVALHO" },
   { name: "EMEB VEREADOR ANTONIO FEITOSA PRIMO", variants: [{ label: "Regular", suffix: "", director: "CONCEIÇÃO" }, { label: "EJA", suffix: " - EJA", director: "FRANCISCA GONÇALVES" }] },
-  { name: "I.E.I ADROALDO ALVES MATOS", variants: [{ label: "Regular", suffix: "", director: "DALLYANNA SOARES TRINDADE" }, { label: "Anexo", suffix: " E ANEXO", director: "DALLYANNA SOARES TRINDADE" }] },
+  { name: "I.E.I ADROALDO ALVES MATOS", variants: [{ label: "Regular", suffix: "", director: "DALLYANNA SOARES TRINDADE" }, { label: "Anexo", suffix: " - ANEXO", director: "DALLYANNA SOARES TRINDADE" }] },
   { name: "I.E.I MARIA STELA FERREIRA DE ARAÚJO", director: "ELANE LINS BARBOSA" },
   { name: "BIBLIOTECA MUN. PROF. RAIMUNDA BEZERRA", director: "CINTHIA VARÃO DA SILVA" },
   { name: "PROJETO ALFABETIZA - BOM JARDIM", director: "CHIRLE SILVA DUARTE" },
@@ -264,7 +268,7 @@ const SCHOOLS = [
   { name: "DOM VALMIR", director: "JOSÉ DE ALMEIDA SOUSA" },
   { name: "DR. ANTONIO DINO", director: "ILDEILDE DE SOUSA COSTA" },
   { name: "ELZAMIR DO NASCIMENTO SOUSA", director: "LAURA ALVES CARVALHO" },
-  { name: "DR. MÁRIO HENRIQUE SIMONSEN", variants: [{ label: "Regular", suffix: "", director: "ANA MARIA BETENCOURTE VIANA" }, { label: "Anexo", suffix: " E ANEXO", director: "ANA MARIA BETENCOURTE VIANA" }] },
+  { name: "DR. MÁRIO HENRIQUE SIMONSEN", variants: [{ label: "Regular", suffix: "", director: "ANA MARIA BETENCOURTE VIANA" }, { label: "Anexo", suffix: " - ANEXO", director: "ANA MARIA BETENCOURTE VIANA" }] },
   { name: "DR. NUNES FREIRE", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" },
   { name: "DUQUE DE CAXIAS", director: "FRANCISCO VAGNER COSTA FERREIRA" },
   { name: "ESTER DE FIGUEIRA FERRAZ", director: "ILDEILDE DE SOUSA COSTA" },
@@ -283,7 +287,7 @@ const SCHOOLS = [
   { name: "NAGIB HAICKEL", director: "JUCIVÂNIA SILVA SANTOS" },
   { name: "NOSSA SENHORA DE FÁTIMA", director: "LUIS CARLOS ALMEIDA SOARES" },
   { name: "NOSSA SENHORA DOS ANJOS", director: "ROSINALVA DA CONCEIÇÃO R. SANTOS" },
-  { name: "OSVALDO CRUZ", variants: [{ label: "Regular", suffix: "", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" }, { label: "Anexo", suffix: " E ANEXO", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" }] },
+  { name: "OSVALDO CRUZ", variants: [{ label: "Regular", suffix: "", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" }, { label: "Anexo", suffix: " - ANEXO", director: "MARIA DA CONCEIÇÃO SOUZA DOS SANTOS" }] },
   { name: "PEDRO NEIVA DE SANTANA", director: "LAURA ALVES CARVALHO" },
   { name: "PRINCESA ISABEL", director: "LUIS CARLOS ALMEIDA SOARES" },
   { name: "RAIMUNDO BENEDITO DUARTE NEVES", director: "MARIA AUCILEIDE DE C. ROCHA" },
@@ -312,7 +316,7 @@ const SCHOOLS = [
   { name: "LAGO VERDE", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
   { name: "MARIA DO SOCORRO OTÁVIO DE OLIVEIRA", director: "MARIANA DE ABREU REGO" },
   { name: "MARLY ANDRÉ", director: "ANA LÚCIA DO NASCIMENTO LINDOSO" },
-  { name: "NOSSA SENHORA APARECIDA", variants: [{ label: "Regular", suffix: "", director: "GILDETE FERREIRA DO NASCIMENTO" }, { label: "Anexo", suffix: " E ANEXO", director: "GILDETE FERREIRA DO NASCIMENTO" }] },
+  { name: "NOSSA SENHORA APARECIDA", variants: [{ label: "Regular", suffix: "", director: "GILDETE FERREIRA DO NASCIMENTO" }, { label: "Anexo", suffix: " - ANEXO", director: "GILDETE FERREIRA DO NASCIMENTO" }] },
   { name: "PADRE NEWTON INÁCIO PEREIRA", director: "VALDIRA SANTOS PAIVA" },
   { name: "PEDREIRA VITAL", director: "WILLIAM SANTOS DA SILVA" },
   { name: "ROSA CASTRO", director: "VALDIRA SANTOS PAIVA" },
@@ -333,7 +337,42 @@ const SCHOOLS = [
   { name: "ZEMU E HAW TAKWAR TYW", director: "MARIA JOSÉ GUAJAJARA OLIVEIRA" },
   { name: "ZEMU' E HAW YWY XIGUHU", director: "ANTÔNIA GATINHO GUAJAJARA" },
   { name: "ZEMU' E HAW MAINUMY ZU", director: "JOSÉ CARLOS VIANA GUAJAJARA" },
-  { name: "ZEMU E HAW TENTEHAR ZANUAR", variants: [{ label: "Regular", suffix: "", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }, { label: "Anexo", suffix: " E ANEXO", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }] }
+  { name: "ZEMU E HAW TENTEHAR ZANUAR", variants: [{ label: "Regular", suffix: "", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }, { label: "Anexo", suffix: " - ANEXO", director: "MÁRCIA REGINA SOUSA GUAJAJARA" }] }
+];
+
+const CAT_OPTS = [
+  { value: "limpeza", label: "Material de Limpeza" },
+  { value: "expediente", label: "Material de Expediente" },
+  { value: "cozinha", label: "Utensílios de Cozinha" },
+  { value: "permanente", label: "Material Permanente" },
+  { value: "agua", label: "Solicitação de Água" },
+  { value: "gas", label: "Solicitação de Gás" },
+  { value: "servico", label: "Serviços / Manutenção Predial" },
+  { value: "ti", label: "Serviços de T.I. / Suporte" }
+];
+
+const COLOR_OPTS = [
+  { value: "", label: "(Nenhuma)" },
+  { value: "Azul", label: "Azul" },
+  { value: "Preto", label: "Preto" },
+  { value: "Vermelho", label: "Vermelho" },
+  { value: "Verde", label: "Verde" },
+  { value: "Amarelo", label: "Amarelo" },
+  { value: "Branco", label: "Branco" }
+];
+
+const UNIT_OPTS = [
+  { value: "Unidade", label: "Unidade" },
+  { value: "Caixa", label: "Caixa" },
+  { value: "Fardo", label: "Fardo" },
+  { value: "Litro", label: "Litro" },
+  { value: "Pacote", label: "Pacote" },
+  { value: "Rolo", label: "Rolo" },
+  { value: "Resma", label: "Resma" },
+  { value: "Garrafão", label: "Garrafão" },
+  { value: "Botijão", label: "Botijão" },
+  { value: "Toner", label: "Toner" },
+  { value: "Refil", label: "Refil" }
 ];
 
 const CATALOG = [
@@ -385,61 +424,106 @@ let state = { school: "", manager: "", portaria: "", memoNumber: "001", category
 let currentSchoolObj = null;
 
 function init(){
-  renderCatalogSelect(); bindEvents(); updateProgress();
-}
-
-function renderSchoolList(filter = "") {
-  const schoolList = $("schoolDropdownList");
-  const schoolInput = $("schoolSearchInput");
-  const variantBlock = $("variantSelectorBlock");
+  setupSchoolDropdown();
+  initCustomDropdown("categoryInput", "categoryList", "categoryWrapper", () => CAT_OPTS, handleCategoryChange);
+  initCustomDropdown("catalogColorInput", "catalogColorList", "catalogColorWrapper", () => COLOR_OPTS, null);
+  initCustomDropdown("customColorInput", "customColorList", "customColorWrapper", () => COLOR_OPTS, null);
+  initCustomDropdown("customUnitInput", "customUnitList", "customUnitWrapper", () => UNIT_OPTS, null);
   
-  schoolList.innerHTML = "";
-  const filtered = SCHOOLS.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
-  
-  filtered.forEach(s => {
-    const div = document.createElement("div");
-    div.className = "px-4 py-2 text-sm hover:bg-[var(--surface-muted)] cursor-pointer border-b border-gray-100 last:border-0";
-    div.textContent = s.name;
-    div.onclick = () => {
-      schoolInput.value = s.name;
-      currentSchoolObj = s;
-      schoolList.classList.add("hidden");
+  // Catálogo é dinâmico, então usamos a função que filtra
+  initCustomDropdown("catalogInput", "catalogList", "catalogWrapper", getCatalogOptions, checkTiModelRequirement);
 
-      if (s.variants) {
-        let html = '<label class="field-label block mb-2 text-[var(--navy)]">Origem do Memorando</label><div class="flex gap-4">';
-        s.variants.forEach((v, i) => {
-          html += `<label class="flex items-center gap-1.5 text-sm cursor-pointer"><input type="radio" name="schoolVariant" value="${i}" ${i===0?'checked':''} class="accent-[var(--navy)]" onchange="selectVariant(${i})"> <span class="font-medium">${v.label}</span></label>`;
-        });
-        html += '</div>';
-        variantBlock.innerHTML = html;
-        variantBlock.classList.remove("hidden");
-        selectVariant(0);
-      } else {
-        variantBlock.innerHTML = "";
-        variantBlock.classList.add("hidden");
-        state.school = s.name;
-        $("managerInput").value = s.director;
-        state.manager = s.director;
-        updateProgress();
-      }
-    };
-    schoolList.appendChild(div);
-  });
-  if (filtered.length === 0) schoolList.innerHTML = '<div class="px-4 py-3 text-sm text-gray-400">Nenhuma escola encontrada...</div>';
-}
-
-function selectVariant(index) {
-  const v = currentSchoolObj.variants[index];
-  state.school = currentSchoolObj.name + v.suffix;
-  $("managerInput").value = v.director;
-  state.manager = v.director;
+  bindEvents();
   updateProgress();
 }
 
-function bindEvents(){
+function initCustomDropdown(inputId, listId, wrapperId, optionsFn, onSelect) {
+  const input = $(inputId);
+  const list = $(listId);
+  const wrapper = $(wrapperId);
+
+  const render = (filter) => {
+    const options = optionsFn();
+    list.innerHTML = "";
+    const filtered = options.filter(o => o.label.toLowerCase().includes(filter.toLowerCase()));
+    filtered.forEach(o => {
+      const div = document.createElement("div");
+      div.className = "px-4 py-2 text-sm hover:bg-[var(--surface-muted)] cursor-pointer border-b border-gray-100 last:border-0 truncate";
+      div.textContent = o.label;
+      div.onclick = () => {
+        input.value = o.label;
+        input.dataset.value = o.value;
+        if(o.unit) input.dataset.unit = o.unit;
+        list.classList.add("hidden");
+        if(onSelect) onSelect(o);
+      };
+      list.appendChild(div);
+    });
+    if(filtered.length === 0) list.innerHTML = '<div class="px-4 py-3 text-sm text-gray-400">Nenhum resultado...</div>';
+  };
+
+  input.addEventListener("click", () => { render(""); list.classList.remove("hidden"); });
+  input.addEventListener("input", (e) => {
+    input.dataset.value = "";
+    render(e.target.value);
+    list.classList.remove("hidden");
+    if(onSelect) onSelect(null);
+  });
+
+  document.addEventListener("click", (e) => {
+    if (wrapper && !wrapper.contains(e.target)) {
+      list.classList.add("hidden");
+      const options = optionsFn();
+      const exists = options.find(o => o.label === input.value);
+      if (!exists && input.value !== "") {
+        input.value = "";
+        input.dataset.value = "";
+        if(onSelect) onSelect(null);
+      }
+    }
+  });
+}
+
+function setupSchoolDropdown() {
   const schoolInput = $("schoolSearchInput");
   const schoolList = $("schoolDropdownList");
   const variantBlock = $("variantSelectorBlock");
+
+  function renderSchoolList(filter = "") {
+    schoolList.innerHTML = "";
+    const filtered = SCHOOLS.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+    
+    filtered.forEach(s => {
+      const div = document.createElement("div");
+      div.className = "px-4 py-2 text-sm hover:bg-[var(--surface-muted)] cursor-pointer border-b border-gray-100 last:border-0 truncate";
+      div.textContent = s.name;
+      div.onclick = () => {
+        schoolInput.value = s.name;
+        currentSchoolObj = s;
+        schoolList.classList.add("hidden");
+
+        if (s.variants) {
+          let html = '<label class="field-label block mb-2 text-[var(--navy)]">Origem do Memorando</label><div class="flex gap-4">';
+          s.variants.forEach((v, i) => {
+            html += `<label class="flex items-center gap-1.5 text-sm cursor-pointer"><input type="radio" name="schoolVariant" value="${i}" ${i===0?'checked':''} class="accent-[var(--navy)]" onchange="selectVariant(${i})"> <span class="font-medium">${v.label}</span></label>`;
+          });
+          html += '</div>';
+          variantBlock.innerHTML = html;
+          variantBlock.classList.remove("hidden");
+          selectVariant(0);
+        } else {
+          variantBlock.innerHTML = "";
+          variantBlock.classList.add("hidden");
+          state.school = s.name.toUpperCase();
+          $("managerInput").value = s.director;
+          state.manager = s.director;
+          updateProgress();
+        }
+      };
+      schoolList.appendChild(div);
+    });
+    if (filtered.length === 0) schoolList.innerHTML = '<div class="px-4 py-3 text-sm text-gray-400">Nenhuma escola encontrada...</div>';
+  }
 
   schoolInput.addEventListener("click", () => { renderSchoolList(""); schoolList.classList.remove("hidden"); });
   schoolInput.addEventListener("input", (e) => { 
@@ -457,63 +541,84 @@ function bindEvents(){
       }
     }
   });
+}
 
+function selectVariant(index) {
+  const v = currentSchoolObj.variants[index];
+  state.school = (currentSchoolObj.name + v.suffix).toUpperCase();
+  $("managerInput").value = v.director;
+  state.manager = v.director;
+  updateProgress();
+}
+
+function getCatalogOptions() {
+  return CATALOG
+    .filter(c => state.category === "" || c.cat === state.category)
+    .map(c => ({ value: c.name, label: c.name, unit: c.unit }));
+}
+
+function handleCategoryChange(item) {
+  const newVal = item ? item.value : "";
+  if (state.items.length > 0 && newVal !== state.category && newVal !== "") {
+    const oldCat = CAT_OPTS.find(c => c.value === state.category);
+    $("categoryInput").value = oldCat ? oldCat.label : "";
+    $("categoryInput").dataset.value = state.category;
+    alert("Remova todos os itens da tabela antes de trocar de categoria.");
+    return;
+  }
+  
+  state.category = newVal;
+  const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  
+  if(state.category === 'expediente') {
+    $("colorFieldBlock").classList.remove("hidden");
+    $("customColorFieldBlock").classList.remove("hidden");
+  } else {
+    $("colorFieldBlock").classList.add("hidden");
+    $("customColorFieldBlock").classList.add("hidden");
+    $("catalogColorInput").value = ""; $("catalogColorInput").dataset.value = "";
+    $("customColorInput").value = ""; $("customColorInput").dataset.value = "";
+  }
+
+  $("catalogQtyLabel").innerText = "QTD.";
+  $("catalogQty").type = "number";
+  $("catalogQty").value = "1";
+  $("catalogQty").placeholder = "";
+
+  const custLabel = $("customQtyLabel");
+  if(custLabel) custLabel.innerText = isSrvOrTi ? "DESCRIÇÃO / DETALHES" : "QTD.";
+  $("customQty").type = isSrvOrTi ? "text" : "number";
+  $("customQty").value = isSrvOrTi ? "" : "1";
+  $("customQty").placeholder = isSrvOrTi ? "Ex: Conserto da porta..." : "";
+  
+  const custNameLabel = $("customNameLabel");
+  if(custNameLabel) custNameLabel.innerText = isSrvOrTi ? "NOME DO SERVIÇO" : "NOME DO PRODUTO";
+
+  if(isSrvOrTi) {
+    $("customUnitBlock").classList.add("hidden");
+    const thLabel = $("tableQtyHeader");
+    if(thLabel) thLabel.innerText = "QTD / DETALHES";
+    if(state.category === 'ti') { $("tiModelBlock").classList.remove("hidden"); }
+    else { $("tiModelBlock").classList.add("hidden"); }
+  } else {
+    $("customUnitBlock").classList.remove("hidden");
+    const thLabel = $("tableQtyHeader");
+    if(thLabel) thLabel.innerText = "QTD.";
+    $("tiModelBlock").classList.add("hidden");
+  }
+
+  // Reseta catálogo ao trocar
+  $("catalogInput").value = ""; 
+  $("catalogInput").dataset.value = "";
+  
+  checkTiModelRequirement();
+  updateProgress();
+}
+
+function bindEvents(){
   $("managerInput").addEventListener("input", e => { state.manager = e.target.value; updateProgress(); });
   $("portariaInput").addEventListener("input", e => { state.portaria = e.target.value; updateProgress(); });
   $("memoNumberInput").addEventListener("input", e => { state.memoNumber = e.target.value; });
-  
-  $("categorySelect").addEventListener("change", e => {
-    if (state.items.length > 0){
-      e.target.value = state.category; 
-      alert("Remova todos os itens da tabela antes de trocar de categoria."); return;
-    }
-    state.category = e.target.value;
-    const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
-    
-    // Cores apenas para Expediente
-    if(state.category === 'expediente') {
-      $("colorFieldBlock").classList.remove("hidden");
-      $("customColorFieldBlock").classList.remove("hidden");
-    } else {
-      $("colorFieldBlock").classList.add("hidden");
-      $("customColorFieldBlock").classList.add("hidden");
-      $("catalogColor").value = ""; $("customColor").value = "";
-    }
-
-    // CATÁLOGO: Sempre Número (QTD.)
-    $("catalogQtyLabel").innerText = "QTD.";
-    $("catalogQty").type = "number";
-    $("catalogQty").value = "1";
-    $("catalogQty").placeholder = "";
-
-    // AVULSO: Muda para DESCRIÇÃO se for Serviço/TI
-    const custLabel = $("customQtyLabel");
-    if(custLabel) custLabel.innerText = isSrvOrTi ? "DESCRIÇÃO / DETALHES" : "QTD.";
-    $("customQty").type = isSrvOrTi ? "text" : "number";
-    $("customQty").value = isSrvOrTi ? "" : "1";
-    $("customQty").placeholder = isSrvOrTi ? "Ex: Conserto da porta..." : "";
-    
-    const custNameLabel = $("customNameLabel");
-    if(custNameLabel) custNameLabel.innerText = isSrvOrTi ? "NOME DO SERVIÇO" : "NOME DO PRODUTO";
-
-    if(isSrvOrTi) {
-      $("customUnitBlock").classList.add("hidden");
-      const thLabel = $("tableQtyHeader");
-      if(thLabel) thLabel.innerText = "QTD / DETALHES";
-      if(state.category === 'ti') { $("tiModelBlock").classList.remove("hidden"); }
-      else { $("tiModelBlock").classList.add("hidden"); }
-    } else {
-      $("customUnitBlock").classList.remove("hidden");
-      const thLabel = $("tableQtyHeader");
-      if(thLabel) thLabel.innerText = "QTD.";
-      $("tiModelBlock").classList.add("hidden");
-    }
-
-    checkTiModelRequirement();
-    renderCatalogSelect(); updateProgress();
-  });
-  
-  $("catalogSelect").addEventListener("change", checkTiModelRequirement);
   
   $("addCatalogItemBtn").addEventListener("click", onAddCatalogItem);
   $("addCustomItemBtn").addEventListener("click", onAddCustomItem);
@@ -523,7 +628,7 @@ function bindEvents(){
 
 function checkTiModelRequirement() {
   const isTI = state.category === 'ti';
-  const val = $("catalogSelect").value.toLowerCase();
+  const val = ($("catalogInput").value || "").toLowerCase();
   const needsModel = val.includes("toner") || val.includes("tinta") || val.includes("impressora") || val.includes("scanner");
   
   if (isTI && needsModel) {
@@ -533,21 +638,12 @@ function checkTiModelRequirement() {
   }
 }
 
-function renderCatalogSelect(){
-  const sel = $("catalogSelect"); sel.innerHTML = "<option value=''>Selecione um item do catálogo…</option>";
-  CATALOG.filter(c => state.category === "" || c.cat === state.category).forEach((item) => {
-    const opt = document.createElement("option"); opt.value = item.name; opt.dataset.unit = item.unit;
-    opt.textContent = `${item.name}`; sel.appendChild(opt);
-  });
-}
-
 function onAddCatalogItem(){
-  const sel = $("catalogSelect");
-  if (!sel.value) return;
+  let name = $("catalogInput").value;
+  if (!name) return;
   
-  let name = sel.value;
-  const unit = sel.options[sel.selectedIndex].dataset.unit;
-  const color = $("catalogColor").value;
+  const unit = $("catalogInput").dataset.unit;
+  const color = $("catalogColorInput").value;
   const qtyVal = parseInt($("catalogQty").value) || 1;
   const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
   
@@ -564,7 +660,10 @@ function onAddCatalogItem(){
   
   state.items.push({ name: name, unit: isSrvOrTi ? "Serviço" : unit, qty: qtyVal });
   
-  sel.value = ""; $("catalogQty").value = 1; $("catalogColor").value = ""; $("tiModelInput").value = "";
+  $("catalogInput").value = ""; $("catalogInput").dataset.value = "";
+  $("catalogQty").value = 1; 
+  $("catalogColorInput").value = ""; $("catalogColorInput").dataset.value = "";
+  $("tiModelInput").value = "";
   checkTiModelRequirement();
   renderItemsTable(); updateProgress();
 }
@@ -580,7 +679,7 @@ function onAddCustomItem(){
   if (isSrvOrTi && qtyVal === "") qtyVal = "-";
   if (!isSrvOrTi && (qtyVal === "" || isNaN(qtyVal))) qtyVal = 1;
   
-  const color = $("customColor").value;
+  const color = $("customColorInput").value;
   if (color && state.category === 'expediente') { name += ` - ${color.toUpperCase()}`; }
   
   const valLower = name.toLowerCase();
@@ -592,10 +691,13 @@ function onAddCustomItem(){
     name += ` (${model})`;
   }
 
-  let unit = isSrvOrTi ? "Serviço" : $("customUnit").value;
+  let unit = isSrvOrTi ? "Serviço" : ($("customUnitInput").value || "Unidade");
   state.items.push({ name, unit: unit, qty: qtyVal });
   
-  $("customName").value = ""; $("customQty").value = isSrvOrTi ? "" : 1; $("customColor").value = ""; $("tiModelInput").value = "";
+  $("customName").value = ""; 
+  $("customQty").value = isSrvOrTi ? "" : 1; 
+  $("customColorInput").value = ""; $("customColorInput").dataset.value = "";
+  $("tiModelInput").value = "";
   renderItemsTable(); updateProgress();
 }
 
@@ -621,7 +723,6 @@ function renderItemsTable(){
   state.items.forEach((it, idx) => {
     const tr = document.createElement("tr");
     
-    // Campo editável na tabela muda dependendo se é texto livre ou número
     const inputHtml = isSrvOrTi 
       ? `<input type="text" value="${it.qty}" class="!w-full !py-1 text-xs" onchange="updateItemQty(${idx}, this.value)">`
       : `<input type="number" min="1" value="${it.qty}" class="!w-20 !py-1" onchange="updateItemQty(${idx}, this.value)">`;
@@ -716,7 +817,6 @@ async function processWord() {
       let qtdStr = "";
       
       if (isSrv || isTI) {
-          // Se for serviço e o valor for número, formata como "03 SERVIÇOS". Se for texto, deixa o texto normal.
           if (!isNaN(it.qty) && it.qty !== "" && it.qty !== "-") {
               const q = parseInt(it.qty);
               const u = it.unit || 'SERVIÇO';
