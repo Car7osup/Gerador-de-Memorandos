@@ -158,9 +158,9 @@
             </select>
           </div>
           
-          <div class="flex gap-2 w-20">
+          <div class="flex gap-2 flex-1 sm:w-48 w-full">
             <div class="w-full">
-              <label class="field-label">Qtd.</label>
+              <label class="field-label" id="catalogQtyLabel">Qtd.</label>
               <input id="catalogQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
           </div>
@@ -201,7 +201,7 @@
             </div>
             
             <div class="w-full">
-              <label class="field-label">Qtd.</label>
+              <label class="field-label" id="customQtyLabel">Qtd.</label>
               <input id="customQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
           </div>
@@ -211,7 +211,7 @@
         <div id="itemsTableWrap" class="hidden pt-2">
           <table class="items-table w-full border border-[var(--line)] rounded-lg overflow-hidden">
             <thead class="bg-[var(--surface-muted)] text-left text-[var(--ink-soft)] uppercase text-[11px] tracking-wide">
-              <tr><th>Item / Descrição</th><th>Unidade</th><th>Qtd.</th><th></th></tr>
+              <tr><th>Item / Descrição</th><th>Unidade</th><th id="tableQtyHeader">Qtd.</th><th></th></tr>
             </thead>
             <tbody id="itemsTableBody"></tbody>
           </table>
@@ -478,15 +478,32 @@ function bindEvents(){
       $("catalogColor").value = ""; $("customColor").value = "";
     }
 
-    // Se for serviço, esconde a caixa de "Unidade" do avulso e muda os textos
+    // Transforma para DESCRIÇÃO se for serviço, ou VOLTA para QTD se for produto
+    const catLabel = $("catalogQtyLabel");
+    if(catLabel) catLabel.innerText = isSrvOrTi ? "DESCRIÇÃO / LOCAL" : "QTD.";
+    $("catalogQty").type = isSrvOrTi ? "text" : "number";
+    $("catalogQty").value = isSrvOrTi ? "" : "1";
+    $("catalogQty").placeholder = isSrvOrTi ? "Ex: Sala 01..." : "";
+
+    const custLabel = $("customQtyLabel");
+    if(custLabel) custLabel.innerText = isSrvOrTi ? "DESCRIÇÃO / DETALHES" : "QTD.";
+    $("customQty").type = isSrvOrTi ? "text" : "number";
+    $("customQty").value = isSrvOrTi ? "" : "1";
+    $("customQty").placeholder = isSrvOrTi ? "Ex: Conserto da porta..." : "";
+    
+    const custNameLabel = $("customNameLabel");
+    if(custNameLabel) custNameLabel.innerText = isSrvOrTi ? "NOME DO SERVIÇO" : "NOME DO PRODUTO";
+
     if(isSrvOrTi) {
       $("customUnitBlock").classList.add("hidden");
-      $("customNameLabel").innerText = "NOME DO SERVIÇO";
+      const thLabel = $("tableQtyHeader");
+      if(thLabel) thLabel.innerText = "DETALHES";
       if(state.category === 'ti') { $("tiModelBlock").classList.remove("hidden"); }
       else { $("tiModelBlock").classList.add("hidden"); }
     } else {
       $("customUnitBlock").classList.remove("hidden");
-      $("customNameLabel").innerText = "NOME DO PRODUTO";
+      const thLabel = $("tableQtyHeader");
+      if(thLabel) thLabel.innerText = "QTD.";
       $("tiModelBlock").classList.add("hidden");
     }
 
@@ -529,9 +546,14 @@ function onAddCatalogItem(){
   let name = sel.value;
   const unit = sel.options[sel.selectedIndex].dataset.unit;
   const color = $("catalogColor").value;
-  const qtyVal = parseInt($("catalogQty").value) || 1;
   
   const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  let qtyVal = $("catalogQty").value;
+  if(typeof qtyVal === 'string') qtyVal = qtyVal.trim();
+  
+  if (isSrvOrTi && qtyVal === "") qtyVal = "-"; 
+  if (!isSrvOrTi && (qtyVal === "" || isNaN(qtyVal))) qtyVal = 1;
+  
   const valLower = name.toLowerCase();
   const needsModel = valLower.includes("toner") || valLower.includes("tinta") || valLower.includes("impressora") || valLower.includes("scanner");
   
@@ -545,7 +567,7 @@ function onAddCatalogItem(){
   
   state.items.push({ name: name, unit: isSrvOrTi ? "Serviço" : unit, qty: qtyVal });
   
-  sel.value = ""; $("catalogQty").value = 1; $("catalogColor").value = ""; $("tiModelInput").value = "";
+  sel.value = ""; $("catalogQty").value = isSrvOrTi ? "" : 1; $("catalogColor").value = ""; $("tiModelInput").value = "";
   checkTiModelRequirement();
   renderItemsTable(); updateProgress();
 }
@@ -555,7 +577,12 @@ function onAddCustomItem(){
   if (!name) return;
   
   const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
-  const qtyVal = parseInt($("customQty").value) || 1;
+  let qtyVal = $("customQty").value;
+  if(typeof qtyVal === 'string') qtyVal = qtyVal.trim();
+
+  if (isSrvOrTi && qtyVal === "") qtyVal = "-";
+  if (!isSrvOrTi && (qtyVal === "" || isNaN(qtyVal))) qtyVal = 1;
+  
   const color = $("customColor").value;
   if (color && state.category === 'expediente') { name += ` - ${color.toUpperCase()}`; }
   
@@ -571,14 +598,19 @@ function onAddCustomItem(){
   let unit = isSrvOrTi ? "Serviço" : $("customUnit").value;
   state.items.push({ name, unit: unit, qty: qtyVal });
   
-  $("customName").value = ""; $("customQty").value = 1; $("customColor").value = ""; $("tiModelInput").value = "";
+  $("customName").value = ""; $("customQty").value = isSrvOrTi ? "" : 1; $("customColor").value = ""; $("tiModelInput").value = "";
   renderItemsTable(); updateProgress();
 }
 
 function removeItem(idx){ state.items.splice(idx, 1); renderItemsTable(); updateProgress(); }
 
 function updateItemQty(idx, val){ 
-  state.items[idx].qty = parseInt(val) > 0 ? parseInt(val) : 1; 
+  const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  if (isSrvOrTi) {
+    state.items[idx].qty = val.trim();
+  } else {
+    state.items[idx].qty = parseInt(val) > 0 ? parseInt(val) : 1; 
+  }
   updateProgress(); 
 }
 
@@ -587,10 +619,18 @@ function renderItemsTable(){
   if (state.items.length === 0){ wrap.classList.add("hidden"); return; }
   wrap.classList.remove("hidden");
   
+  const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  
   state.items.forEach((it, idx) => {
     const tr = document.createElement("tr");
+    
+    // Campo editável na tabela muda dependendo se é texto ou número
+    const inputHtml = isSrvOrTi 
+      ? `<input type="text" value="${it.qty}" class="!w-full !py-1 text-xs" onchange="updateItemQty(${idx}, this.value)">`
+      : `<input type="number" min="1" value="${it.qty}" class="!w-20 !py-1" onchange="updateItemQty(${idx}, this.value)">`;
+
     tr.innerHTML = `<td>${it.name}</td><td>${it.unit}</td>
-      <td><input type="number" min="1" value="${it.qty}" class="!w-20 !py-1" onchange="updateItemQty(${idx}, this.value)"></td>
+      <td>${inputHtml}</td>
       <td class="text-right"><button onclick="removeItem(${idx})" class="text-[var(--danger)] text-xs font-bold uppercase hover:underline">Remover</button></td>`;
     body.appendChild(tr);
   });
@@ -661,7 +701,6 @@ async function processWord() {
 
     let assuntoTxt = "";
     if (isSrv || isTI) {
-        // O assunto vira automaticamente a solicitação do 1º item!
         assuntoTxt = state.items[0].name.toUpperCase();
     } else {
         switch(state.category) {
@@ -677,14 +716,19 @@ async function processWord() {
     const itensWord = state.items.map((it, idx) => {
       const numStr = String(idx + 1).padStart(2, '0');
       const prodStr = (it.name || '').toUpperCase();
-      const q = parseInt(it.qty) || 1;
-      const u = it.unit || 'UNIDADE';
-      const qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
+      let qtdStr = "";
+      
+      if (isSrv || isTI) {
+          qtdStr = String(it.qty).toUpperCase();
+      } else {
+          const q = parseInt(it.qty) || 1;
+          const u = it.unit || 'UNIDADE';
+          qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
+      }
       
       return { NUM: numStr, PRODUTO: prodStr, PRODUTOS: prodStr, APARELHO: prodStr, QTD: qtdStr, QUANTIDADE: qtdStr };
     });
 
-    // SISTEMA INVISÍVEL DE PALAVRAS DO T.I.
     let tiServico = "MANUTENÇÃO";
     let tiDao = "DE";
     let tiAparelho = "EQUIPAMENTOS DE T.I.";
