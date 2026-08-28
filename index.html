@@ -438,7 +438,6 @@ function updateProgress(){
 async function processWord() {
   const isService = state.category === 'servico';
   
-  // NOME ATUALIZADO SEM O "Ç" PARA NÃO DAR ERRO NO GITHUB
   const fileName = isService ? 'MODELO_MEMORANDO_SERVICOS.docx' : 'MODELO_MEMORANDO_PRODUTOS.docx';
   
   try {
@@ -463,11 +462,22 @@ async function processWord() {
 
     const assuntoTxt = state.category === 'consumo' ? 'MATERIAIS DE CONSUMO' : state.category === 'permanente' ? 'MATERIAIS PERMANENTES' : $("solicitacaoInput").value.toUpperCase();
 
-    const itensWord = state.items.map((it, idx) => ({
-      NUM: String(idx + 1).padStart(2, '0'),
-      PRODUTO: it.name.toUpperCase(),
-      QTD: `${String(it.qty).padStart(2, '0')} ${it.unit.toUpperCase()}${it.qty > 1 && !it.unit.toLowerCase().endsWith('s') ? 'S' : ''}`
-    }));
+    // Váriaveis protegidas e duplicadas para garantir o acerto da tabela independente da tag que você usou
+    const itensWord = state.items.map((it, idx) => {
+      const numStr = String(idx + 1).padStart(2, '0');
+      const prodStr = (it.name || '').toUpperCase();
+      const q = it.qty || 1;
+      const u = it.unit || 'UNIDADE';
+      const qtdStr = `${String(q).padStart(2, '0')} ${u.toUpperCase()}${q > 1 && !u.toLowerCase().endsWith('S') ? 'S' : ''}`;
+      
+      return {
+        NUM: numStr,
+        PRODUTO: prodStr,
+        PRODUTOS: prodStr,
+        QTD: qtdStr,
+        QUANTIDADE: qtdStr
+      };
+    });
 
     doc.render({
       "NÚMERO MEMORANDO": $("memoNumberInput").value,
@@ -487,7 +497,7 @@ async function processWord() {
     saveAs(out, `Memo_${sigla}_${$("memoNumberInput").value}.docx`);
     
   } catch (error) {
-    alert("ERRO: O navegador bloqueou o carregamento do arquivo modelo. Verifique se os nomes dos arquivos na pasta do GitHub estão exatos: MODELO_MEMORANDO_SERVICOS.docx e MODELO_MEMORANDO_PRODUTOS.docx");
+    alert("ERRO: O navegador bloqueou o carregamento do arquivo modelo. Verifique os nomes dos arquivos na pasta do GitHub: MODELO_MEMORANDO_SERVICOS.docx e MODELO_MEMORANDO_PRODUTOS.docx");
     console.error(error);
   }
 }
