@@ -105,6 +105,9 @@
         <option value="permanente">Material Permanente</option>
         <option value="servico">Serviço / Manutenção</option>
       </select>
+      <div id="categoryLockedNote" class="hidden text-xs text-[var(--ink-soft)] bg-[var(--surface-muted)] rounded-lg px-3 py-2 mt-2">
+        Remova todos os itens da tabela para trocar de categoria.
+      </div>
     </section>
 
     <!-- STEP 3: Itens ou Serviços -->
@@ -467,7 +470,7 @@ async function processWord() {
     }));
 
     doc.render({
-      "NÚMERO MEMORANDO": $("memoInput").value,
+      "NÚMERO MEMORANDO": $("memoNumberInput").value,
       "SIGLA ESCOLA": sigla,
       "DIA": h.getDate().toString().padStart(2,'0'),
       "MÊS": meses[h.getMonth()],
@@ -481,7 +484,7 @@ async function processWord() {
     });
 
     const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    saveAs(out, `Memo_${sigla}_${$("memoInput").value}.docx`);
+    saveAs(out, `Memo_${sigla}_${$("memoNumberInput").value}.docx`);
     
   } catch (error) {
     alert("ERRO: O navegador bloqueou o carregamento do arquivo modelo. Verifique se os nomes dos arquivos na pasta do GitHub estão exatos: MODELO_MEMORANDO_SERVICOS.docx e MODELO_MEMORANDO_PRODUTOS.docx");
