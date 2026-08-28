@@ -90,10 +90,7 @@
           </div>
           <div id="schoolDropdownList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
           
-          <!-- Opções de Variação (Regular / EJA / Anexo) -->
-          <div id="variantSelectorBlock" class="hidden mt-3 p-3 bg-[var(--surface-muted)] rounded-lg border border-[var(--line)]">
-            <!-- Gerado via JS -->
-          </div>
+          <div id="variantSelectorBlock" class="hidden mt-3 p-3 bg-[var(--surface-muted)] rounded-lg border border-[var(--line)]"></div>
         </div>
 
         <div>
@@ -119,8 +116,12 @@
       </div>
       <select id="categorySelect">
         <option value="">Selecione a categoria…</option>
-        <option value="consumo">Material de Consumo</option>
+        <option value="limpeza">Material de Limpeza</option>
+        <option value="expediente">Material de Expediente</option>
+        <option value="cozinha">Utensílios de Cozinha</option>
         <option value="permanente">Material Permanente</option>
+        <option value="agua">Solicitação de Água</option>
+        <option value="gas">Solicitação de Gás</option>
         <option value="servico">Serviço / Manutenção</option>
       </select>
     </section>
@@ -138,31 +139,56 @@
 
       <!-- PARA MATERIAIS -->
       <div id="itemPickerBlock" class="hidden space-y-4">
-        <div class="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
+        <div class="grid sm:grid-cols-[1fr_auto_auto] gap-3 items-end">
           <div>
             <label class="field-label">Buscar no catálogo</label>
             <select id="catalogSelect" class="mt-1"></select>
           </div>
+          <div class="w-28">
+            <label class="field-label">Cor</label>
+            <select id="catalogColor" class="mt-1">
+              <option value="">(Nenhuma)</option>
+              <option value="Azul">Azul</option>
+              <option value="Preto">Preto</option>
+              <option value="Vermelho">Vermelho</option>
+              <option value="Verde">Verde</option>
+              <option value="Amarelo">Amarelo</option>
+              <option value="Branco">Branco</option>
+            </select>
+          </div>
           <div class="flex gap-2">
-            <div class="w-24">
+            <div class="w-20">
               <label class="field-label">Qtd.</label>
               <input id="catalogQty" type="number" min="1" value="1" class="mt-1">
             </div>
           </div>
         </div>
-        <button id="addCatalogItemBtn" class="btn btn-primary">Adicionar Item</button>
+        <button id="addCatalogItemBtn" class="btn btn-primary w-full sm:w-auto">Adicionar Item</button>
 
         <details class="pt-2">
           <summary class="text-sm font-semibold text-[var(--navy)] cursor-pointer select-none">+ Adicionar item avulso (fora do catálogo)</summary>
-          <div class="mt-3 grid sm:grid-cols-4 gap-3">
+          <div class="mt-3 grid sm:grid-cols-4 gap-3 items-end">
             <div class="sm:col-span-2">
               <label class="field-label">Nome do produto</label>
               <input id="customName" type="text" class="mt-1">
             </div>
             <div>
+              <label class="field-label">Cor</label>
+              <select id="customColor" class="mt-1">
+                <option value="">(Nenhuma)</option>
+                <option value="Azul">Azul</option>
+                <option value="Preto">Preto</option>
+                <option value="Vermelho">Vermelho</option>
+                <option value="Verde">Verde</option>
+                <option value="Amarelo">Amarelo</option>
+                <option value="Branco">Branco</option>
+              </select>
+            </div>
+            <div>
               <label class="field-label">Unidade</label>
               <select id="customUnit" class="mt-1">
-                <option>Unidade</option><option>Caixa</option><option>Fardo</option><option>Litro</option><option>Pacote</option><option>Rolo</option><option>Galão</option><option>Kg</option>
+                <option>Unidade</option><option>Caixa</option><option>Fardo</option><option>Litro</option>
+                <option>Pacote</option><option>Rolo</option><option>Resma</option><option>Garrafão</option><option>Botijão</option>
               </select>
             </div>
             <div>
@@ -207,7 +233,6 @@
   </main>
 
 <script>
-// Dados formatados: Escolas com EJA ou ANEXO viraram "variants"
 const SCHOOLS = [
   // SEDE
   { 
@@ -322,6 +347,7 @@ const SCHOOLS = [
   { name: "SERAFIN VIEIRA DO VALE", director: "ILDEILDE DE SOUSA COSTA" },
   { name: "VEREADORA FRANCISCA GERMANO DE B. NEVES", director: "LUIZ CARLOS ALMEIRA SOARES" },
   { name: "ZEFERINO GOMES PEREIRA", director: "ANTONIO NILSON PEREIRA GARROS" },
+  
   // REGIÃO DA VARIG
   { name: "03 DE SETEMBRO", director: "MARIANA DE ABREU REGO" },
   { name: "BOM JESUS", director: "GILDETE FERREIRA DO NASCIMENTO" },
@@ -359,6 +385,7 @@ const SCHOOLS = [
   { name: "TERRA LIVRE", director: "LAIRES PRISCILA DA SILVA MOURA" },
   { name: "VILA NOVA", director: "MARIANA DE ABREU REGO" },
   { name: "CASA FAMILIAR RURAL- PADRE JOSINO TAVARES", director: "MARIA DA LUZ SOUSA ESTÁCIO" },
+  
   // INDÍGENAS
   { name: "BILINGUE GUAJAJARA", director: "CILENE GUAJAJARA DE SOUSA" },
   { name: "TENTEHAR", director: "MARILENE VIANA GUAJAJARA" },
@@ -375,25 +402,42 @@ const SCHOOLS = [
 ];
 
 const CATALOG = [
-  { name: "Detergente neutro 500ml", unit: "Unidade", cat: "consumo" },
-  { name: "Água sanitária 1L",       unit: "Litro",   cat: "consumo" },
-  { name: "Desinfetante 2L",         unit: "Litro",   cat: "consumo" },
-  { name: "Sabão em barra",          unit: "Unidade", cat: "consumo" },
-  { name: "Papel higiênico",         unit: "Fardo",   cat: "consumo" },
-  { name: "Álcool 70% 1L",           unit: "Litro",   cat: "consumo" },
-  { name: "Vassoura de palha",       unit: "Unidade", cat: "consumo" },
-  { name: "Saco de lixo 50L",        unit: "Pacote",  cat: "consumo" },
-  { name: "Papel A4 (resma)",        unit: "Caixa",   cat: "consumo" },
-  { name: "Caneta esferográfica azul", unit: "Caixa", cat: "consumo" },
-  { name: "Cartucho de impressora",  unit: "Unidade", cat: "consumo" },
-  { name: "Copo descartável 200ml",  unit: "Pacote",  cat: "consumo" },
-  { name: "Guardanapo de papel",     unit: "Pacote",  cat: "consumo" },
-  { name: "Botijão de gás 13kg",     unit: "Unidade", cat: "consumo" },
-  { name: "Cadeira universitária",   unit: "Unidade", cat: "permanente" },
-  { name: "Birô / mesa de escritório", unit: "Unidade", cat: "permanente" },
-  { name: "Armário de aço",          unit: "Unidade", cat: "permanente" },
-  { name: "Ventilador de parede",    unit: "Unidade", cat: "permanente" },
+  // Limpeza
+  { name: "Detergente neutro", unit: "Unidade", cat: "limpeza" },
+  { name: "Água sanitária",    unit: "Litro",   cat: "limpeza" },
+  { name: "Desinfetante",      unit: "Litro",   cat: "limpeza" },
+  { name: "Sabão em barra",    unit: "Unidade", cat: "limpeza" },
+  { name: "Papel higiênico",   unit: "Fardo",   cat: "limpeza" },
+  { name: "Álcool 70%",        unit: "Litro",   cat: "limpeza" },
+  { name: "Vassoura de palha", unit: "Unidade", cat: "limpeza" },
+  { name: "Saco de lixo",      unit: "Pacote",  cat: "limpeza" },
+  
+  // Expediente
+  { name: "Papel A4",          unit: "Resma",   cat: "expediente" },
+  { name: "Caneta esferográfica", unit: "Caixa", cat: "expediente" },
+  { name: "Cartucho de impressora", unit: "Unidade", cat: "expediente" },
+  { name: "Pincel para quadro branco", unit: "Caixa", cat: "expediente" },
+  
+  // Cozinha
+  { name: "Copo descartável",  unit: "Pacote",  cat: "cozinha" },
+  { name: "Guardanapo de papel", unit: "Pacote", cat: "cozinha" },
+  { name: "Prato de vidro",    unit: "Unidade", cat: "cozinha" },
+  { name: "Colher de sopa",    unit: "Unidade", cat: "cozinha" },
+  
+  // Água
+  { name: "Água mineral",      unit: "Garrafão", cat: "agua" },
+  
+  // Gás
+  { name: "Gás de cozinha",    unit: "Botijão", cat: "gas" },
+  
+  // Permanente
+  { name: "Cadeira universitária", unit: "Unidade", cat: "permanente" },
+  { name: "Mesa de escritório", unit: "Unidade", cat: "permanente" },
+  { name: "Armário de aço",    unit: "Unidade", cat: "permanente" },
+  { name: "Ventilador de parede", unit: "Unidade", cat: "permanente" },
 ];
+
+const $ = (id) => document.getElementById(id);
 
 let state = {
   school: "", manager: "", portaria: "", memoNumber: "001", category: "", items: [], solicitacao: "", detalhe: ""
@@ -401,17 +445,17 @@ let state = {
 
 let currentSchoolObj = null;
 
-const $ = (id) => document.getElementById(id);
-
 function init(){
-  renderCatalogSelect(); bindEvents(); updateProgress();
+  renderCatalogSelect(); 
+  bindEvents(); 
+  updateProgress();
 }
 
-const schoolInput = $("schoolSearchInput");
-const schoolList = $("schoolDropdownList");
-const variantBlock = $("variantSelectorBlock");
-
 function renderSchoolList(filter = "") {
+  const schoolList = $("schoolDropdownList");
+  const schoolInput = $("schoolSearchInput");
+  const variantBlock = $("variantSelectorBlock");
+  
   schoolList.innerHTML = "";
   const filtered = SCHOOLS.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
   
@@ -458,20 +502,44 @@ function selectVariant(index) {
   updateProgress();
 }
 
-schoolInput.addEventListener("click", () => { renderSchoolList(""); schoolList.classList.remove("hidden"); });
-schoolInput.addEventListener("input", (e) => { renderSchoolList(e.target.value); schoolList.classList.remove("hidden"); });
-
-document.addEventListener("click", (e) => {
-  const wrapper = $("schoolDropdownWrapper");
-  if (wrapper && !wrapper.contains(e.target)) {
-    schoolList.classList.add("hidden");
-    if (!currentSchoolObj && schoolInput.value !== "") {
-      schoolInput.value = ""; state.school = ""; $("managerInput").value = ""; state.manager = ""; variantBlock.classList.add("hidden"); updateProgress();
-    }
-  }
-});
-
 function bindEvents(){
+  const schoolInput = $("schoolSearchInput");
+  const schoolList = $("schoolDropdownList");
+  const variantBlock = $("variantSelectorBlock");
+
+  schoolInput.addEventListener("click", () => { 
+    renderSchoolList(""); 
+    schoolList.classList.remove("hidden"); 
+  });
+
+  schoolInput.addEventListener("input", (e) => { 
+    currentSchoolObj = null;
+    state.school = "";
+    $("managerInput").value = "";
+    state.manager = "";
+    variantBlock.classList.add("hidden");
+    variantBlock.innerHTML = "";
+    
+    renderSchoolList(e.target.value); 
+    schoolList.classList.remove("hidden"); 
+    updateProgress();
+  });
+
+  document.addEventListener("click", (e) => {
+    const wrapper = $("schoolDropdownWrapper");
+    if (wrapper && !wrapper.contains(e.target)) {
+      schoolList.classList.add("hidden");
+      if (!currentSchoolObj && schoolInput.value !== "") {
+        schoolInput.value = ""; 
+        state.school = ""; 
+        $("managerInput").value = ""; 
+        state.manager = ""; 
+        variantBlock.classList.add("hidden"); 
+        updateProgress();
+      }
+    }
+  });
+
   $("managerInput").addEventListener("input", e => { state.manager = e.target.value; updateProgress(); });
   $("portariaInput").addEventListener("input", e => { state.portaria = e.target.value; updateProgress(); });
   $("memoNumberInput").addEventListener("input", e => { state.memoNumber = e.target.value; });
@@ -492,7 +560,6 @@ function bindEvents(){
   $("detalheInput").addEventListener("input", e => { state.detalhe = e.target.value; updateProgress(); });
   
   $("clearFormBtn").addEventListener("click", () => { if(confirm("Limpar tudo?")) location.reload(); });
-  
   $("generateWordBtn").addEventListener("click", processWord);
 }
 
@@ -507,17 +574,31 @@ function renderCatalogSelect(){
 function onAddCatalogItem(){
   const sel = $("catalogSelect");
   if (!sel.value){ return; }
+  
+  let name = sel.value;
   const unit = sel.options[sel.selectedIndex].dataset.unit;
   const qty = parseInt($("catalogQty").value) || 1;
-  state.items.push({ name: sel.value, unit: unit, qty });
-  sel.value = ""; $("catalogQty").value = 1; renderItemsTable(); updateProgress();
+  const color = $("catalogColor").value;
+  
+  if (color) { name += ` - ${color.toUpperCase()}`; }
+  
+  state.items.push({ name: name, unit: unit, qty });
+  
+  sel.value = ""; $("catalogQty").value = 1; $("catalogColor").value = ""; 
+  renderItemsTable(); updateProgress();
 }
 
 function onAddCustomItem(){
-  const name = $("customName").value.trim();
+  let name = $("customName").value.trim();
   if (!name){ return; }
+  
+  const color = $("customColor").value;
+  if (color) { name += ` - ${color.toUpperCase()}`; }
+  
   state.items.push({ name, unit: $("customUnit").value, qty: parseInt($("customQty").value) || 1 });
-  $("customName").value = ""; $("customQty").value = 1; renderItemsTable(); updateProgress();
+  
+  $("customName").value = ""; $("customQty").value = 1; $("customColor").value = "";
+  renderItemsTable(); updateProgress();
 }
 
 function removeItem(idx){ state.items.splice(idx, 1); renderItemsTable(); updateProgress(); }
@@ -566,6 +647,16 @@ function updateProgress(){
   $("generateWordBtn").disabled = !(s1 && s2 && s3);
 }
 
+function formatPlural(u, q) {
+  if (q <= 1) return u.toUpperCase();
+  let str = u.toUpperCase();
+  if (str === 'GARRAFÃO') return 'GARRAFÕES';
+  if (str === 'BOTIJÃO' || str === 'GALÃO') return str.replace('ÃO', 'ÕES');
+  if (str === 'RESMA') return 'RESMAS';
+  if (!str.endsWith('S')) return str + 'S';
+  return str;
+}
+
 async function processWord() {
   const isService = state.category === 'servico';
   let fileName = '';
@@ -596,14 +687,23 @@ async function processWord() {
       }
     });
 
-    const assuntoTxt = state.category === 'consumo' ? 'MATERIAIS DE CONSUMO' : state.category === 'permanente' ? 'MATERIAIS PERMANENTES' : state.solicitacao.toUpperCase();
+    let assuntoTxt = "";
+    switch(state.category) {
+        case 'limpeza': assuntoTxt = 'MATERIAIS DE LIMPEZA'; break;
+        case 'expediente': assuntoTxt = 'MATERIAIS DE EXPEDIENTE'; break;
+        case 'permanente': assuntoTxt = 'MATERIAIS PERMANENTES'; break;
+        case 'cozinha': assuntoTxt = 'UTENSÍLIOS DE COZINHA'; break;
+        case 'agua': assuntoTxt = 'ÁGUA'; break;
+        case 'gas': assuntoTxt = 'GÁS'; break;
+        case 'servico': assuntoTxt = state.solicitacao.toUpperCase(); break;
+    }
 
     const itensWord = state.items.map((it, idx) => {
       const numStr = String(idx + 1).padStart(2, '0');
       const prodStr = (it.name || '').toUpperCase();
       const q = it.qty || 1;
       const u = it.unit || 'UNIDADE';
-      const qtdStr = `${String(q).padStart(2, '0')} ${u.toUpperCase()}${q > 1 && !u.toLowerCase().endsWith('S') ? 'S' : ''}`;
+      const qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
       
       return { NUM: numStr, PRODUTO: prodStr, PRODUTOS: prodStr, QTD: qtdStr, QUANTIDADE: qtdStr };
     });
