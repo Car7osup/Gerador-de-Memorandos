@@ -160,6 +160,7 @@
           
           <div class="flex gap-2 flex-1 sm:w-48 w-full">
             <div class="w-full">
+              <!-- No catálogo a quantidade é SEMPRE número -->
               <label class="field-label" id="catalogQtyLabel">Qtd.</label>
               <input id="catalogQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
@@ -201,6 +202,7 @@
             </div>
             
             <div class="w-full">
+              <!-- No avulso, pode virar texto (Descrição/Detalhes) dependendo da categoria -->
               <label class="field-label" id="customQtyLabel">Qtd.</label>
               <input id="customQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
@@ -468,7 +470,7 @@ function bindEvents(){
     state.category = e.target.value;
     const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
     
-    // Mostra Cores só pra Expediente
+    // Cores apenas para Expediente
     if(state.category === 'expediente') {
       $("colorFieldBlock").classList.remove("hidden");
       $("customColorFieldBlock").classList.remove("hidden");
@@ -478,13 +480,13 @@ function bindEvents(){
       $("catalogColor").value = ""; $("customColor").value = "";
     }
 
-    // Transforma para DESCRIÇÃO se for serviço, ou VOLTA para QTD se for produto
-    const catLabel = $("catalogQtyLabel");
-    if(catLabel) catLabel.innerText = isSrvOrTi ? "DESCRIÇÃO / LOCAL" : "QTD.";
-    $("catalogQty").type = isSrvOrTi ? "text" : "number";
-    $("catalogQty").value = isSrvOrTi ? "" : "1";
-    $("catalogQty").placeholder = isSrvOrTi ? "Ex: Sala 01..." : "";
+    // CATÁLOGO: Sempre Número (QTD.)
+    $("catalogQtyLabel").innerText = "QTD.";
+    $("catalogQty").type = "number";
+    $("catalogQty").value = "1";
+    $("catalogQty").placeholder = "";
 
+    // AVULSO: Muda para DESCRIÇÃO se for Serviço/TI
     const custLabel = $("customQtyLabel");
     if(custLabel) custLabel.innerText = isSrvOrTi ? "DESCRIÇÃO / DETALHES" : "QTD.";
     $("customQty").type = isSrvOrTi ? "text" : "number";
@@ -497,7 +499,7 @@ function bindEvents(){
     if(isSrvOrTi) {
       $("customUnitBlock").classList.add("hidden");
       const thLabel = $("tableQtyHeader");
-      if(thLabel) thLabel.innerText = "DETALHES";
+      if(thLabel) thLabel.innerText = "QTD / DETALHES";
       if(state.category === 'ti') { $("tiModelBlock").classList.remove("hidden"); }
       else { $("tiModelBlock").classList.add("hidden"); }
     } else {
@@ -546,13 +548,8 @@ function onAddCatalogItem(){
   let name = sel.value;
   const unit = sel.options[sel.selectedIndex].dataset.unit;
   const color = $("catalogColor").value;
-  
+  const qtyVal = parseInt($("catalogQty").value) || 1;
   const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
-  let qtyVal = $("catalogQty").value;
-  if(typeof qtyVal === 'string') qtyVal = qtyVal.trim();
-  
-  if (isSrvOrTi && qtyVal === "") qtyVal = "-"; 
-  if (!isSrvOrTi && (qtyVal === "" || isNaN(qtyVal))) qtyVal = 1;
   
   const valLower = name.toLowerCase();
   const needsModel = valLower.includes("toner") || valLower.includes("tinta") || valLower.includes("impressora") || valLower.includes("scanner");
@@ -567,7 +564,7 @@ function onAddCatalogItem(){
   
   state.items.push({ name: name, unit: isSrvOrTi ? "Serviço" : unit, qty: qtyVal });
   
-  sel.value = ""; $("catalogQty").value = isSrvOrTi ? "" : 1; $("catalogColor").value = ""; $("tiModelInput").value = "";
+  sel.value = ""; $("catalogQty").value = 1; $("catalogColor").value = ""; $("tiModelInput").value = "";
   checkTiModelRequirement();
   renderItemsTable(); updateProgress();
 }
@@ -577,9 +574,9 @@ function onAddCustomItem(){
   if (!name) return;
   
   const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
+  
   let qtyVal = $("customQty").value;
   if(typeof qtyVal === 'string') qtyVal = qtyVal.trim();
-
   if (isSrvOrTi && qtyVal === "") qtyVal = "-";
   if (!isSrvOrTi && (qtyVal === "" || isNaN(qtyVal))) qtyVal = 1;
   
@@ -624,7 +621,7 @@ function renderItemsTable(){
   state.items.forEach((it, idx) => {
     const tr = document.createElement("tr");
     
-    // Campo editável na tabela muda dependendo se é texto ou número
+    // Campo editável na tabela muda dependendo se é texto livre ou número
     const inputHtml = isSrvOrTi 
       ? `<input type="text" value="${it.qty}" class="!w-full !py-1 text-xs" onchange="updateItemQty(${idx}, this.value)">`
       : `<input type="number" min="1" value="${it.qty}" class="!w-20 !py-1" onchange="updateItemQty(${idx}, this.value)">`;
@@ -719,7 +716,14 @@ async function processWord() {
       let qtdStr = "";
       
       if (isSrv || isTI) {
-          qtdStr = String(it.qty).toUpperCase();
+          // Se for serviço e o valor for número, formata como "03 SERVIÇOS". Se for texto, deixa o texto normal.
+          if (!isNaN(it.qty) && it.qty !== "" && it.qty !== "-") {
+              const q = parseInt(it.qty);
+              const u = it.unit || 'SERVIÇO';
+              qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
+          } else {
+              qtdStr = String(it.qty).toUpperCase();
+          }
       } else {
           const q = parseInt(it.qty) || 1;
           const u = it.unit || 'UNIDADE';
