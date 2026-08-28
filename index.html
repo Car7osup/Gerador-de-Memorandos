@@ -47,6 +47,12 @@
   .card{background:var(--surface); border:1px solid var(--line); border-radius:14px;}
   table.items-table tbody tr:nth-child(even){background:#faf9f6;}
   table.items-table td, table.items-table th{padding:10px 12px; font-size:13.5px;}
+  
+  /* Scrollbar customizada para o dropdown */
+  .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+  .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 8px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 8px; }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
 </style>
 </head>
 <body class="min-h-screen">
@@ -74,10 +80,21 @@
         <h2 class="font-bold text-[var(--navy)]">Identificação da Unidade Escolar</h2>
       </div>
       <div class="grid sm:grid-cols-2 gap-4">
-        <div>
+        
+        <!-- Dropdown com Pesquisa -->
+        <div class="relative" id="schoolDropdownWrapper">
           <label class="field-label">Escola Municipal</label>
-          <select id="schoolSelect" class="mt-1"><option value="">Selecione a escola…</option></select>
+          <div class="relative mt-1">
+            <input type="text" id="schoolSearchInput" class="w-full pr-8 cursor-text" placeholder="Pesquise ou selecione a escola..." autocomplete="off">
+            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+            </div>
+          </div>
+          <div id="schoolDropdownList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar">
+            <!-- As opções vão aparecer aqui -->
+          </div>
         </div>
+
         <div>
           <label class="field-label">Nome do(a) Gestor(a)</label>
           <input id="managerInput" type="text" class="mt-1" placeholder="Nome completo (Pode ser editado)">
@@ -322,19 +339,64 @@ let state = {
 const $ = (id) => document.getElementById(id);
 
 function init(){
-  const schoolSelect = $("schoolSelect");
-  SCHOOLS.forEach(s => { const opt = document.createElement("option"); opt.value = s.name; opt.textContent = s.name; schoolSelect.appendChild(opt); });
-
   renderCatalogSelect(); bindEvents(); updateProgress();
 }
 
-function bindEvents(){
-  $("schoolSelect").addEventListener("change", e => {
-    state.school = e.target.value;
-    const s = SCHOOLS.find(s => s.name === state.school);
-    $("managerInput").value = s ? s.director : ""; state.manager = s ? s.director : "";
-    updateProgress();
+// LOGICA DO DROPDOWN PESQUISÁVEL
+const schoolInput = $("schoolSearchInput");
+const schoolList = $("schoolDropdownList");
+
+function renderSchoolList(filter = "") {
+  schoolList.innerHTML = "";
+  const filtered = SCHOOLS.filter(s => s.name.toLowerCase().includes(filter.toLowerCase()));
+  
+  filtered.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "px-4 py-2 text-sm hover:bg-[var(--surface-muted)] cursor-pointer border-b border-gray-100 last:border-0";
+    div.textContent = s.name;
+    div.onclick = () => {
+      schoolInput.value = s.name;
+      state.school = s.name;
+      $("managerInput").value = s.director;
+      state.manager = s.director;
+      schoolList.classList.add("hidden");
+      updateProgress();
+    };
+    schoolList.appendChild(div);
   });
+
+  if (filtered.length === 0) {
+    schoolList.innerHTML = '<div class="px-4 py-3 text-sm text-gray-400">Nenhuma escola encontrada...</div>';
+  }
+}
+
+schoolInput.addEventListener("click", () => {
+  renderSchoolList("");
+  schoolList.classList.remove("hidden");
+});
+
+schoolInput.addEventListener("input", (e) => {
+  renderSchoolList(e.target.value);
+  schoolList.classList.remove("hidden");
+});
+
+// Fechar dropdown ao clicar fora e limpar se for inválido
+document.addEventListener("click", (e) => {
+  const wrapper = $("schoolDropdownWrapper");
+  if (wrapper && !wrapper.contains(e.target)) {
+    schoolList.classList.add("hidden");
+    const exists = SCHOOLS.find(s => s.name === schoolInput.value);
+    if (!exists && schoolInput.value !== "") {
+      schoolInput.value = "";
+      state.school = "";
+      $("managerInput").value = "";
+      state.manager = "";
+      updateProgress();
+    }
+  }
+});
+
+function bindEvents(){
   $("managerInput").addEventListener("input", e => { state.manager = e.target.value; updateProgress(); });
   $("portariaInput").addEventListener("input", e => { state.portaria = e.target.value; updateProgress(); });
   $("memoNumberInput").addEventListener("input", e => { state.memoNumber = e.target.value; });
@@ -355,7 +417,6 @@ function bindEvents(){
   $("detalheInput").addEventListener("input", e => { state.detalhe = e.target.value; updateProgress(); });
   
   $("clearFormBtn").addEventListener("click", () => { if(confirm("Limpar tudo?")) location.reload(); });
-  
   $("generateWordBtn").addEventListener("click", processWord);
 }
 
@@ -388,8 +449,8 @@ function updateItemQty(idx, val){ state.items[idx].qty = parseInt(val) > 0 ? par
 
 function renderItemsTable(){
   const wrap = $("itemsTableWrap"); const body = $("itemsTableBody"); body.innerHTML = "";
-  if (state.items.length === 0){ wrap.classList.add("hidden"); $("categoryLockedNote").classList.add("hidden"); return; }
-  wrap.classList.remove("hidden"); $("categoryLockedNote").classList.remove("hidden");
+  if (state.items.length === 0){ wrap.classList.add("hidden"); return; }
+  wrap.classList.remove("hidden");
   state.items.forEach((it, idx) => {
     const tr = document.createElement("tr");
     tr.innerHTML = `<td>${it.name}</td><td>${it.unit}</td>
@@ -410,12 +471,10 @@ function updateProgress(){
       if (isService) {
           $("itemPickerBlock").classList.add("hidden");
           $("serviceFieldsBlock").classList.remove("hidden");
-          $("step3Title").textContent = "Detalhes do Serviço";
           s3 = state.solicitacao.trim().length > 0 && state.detalhe.trim().length > 0;
       } else {
           $("itemPickerBlock").classList.remove("hidden");
           $("serviceFieldsBlock").classList.add("hidden");
-          $("step3Title").textContent = "Itens Solicitados";
           s3 = state.items.length > 0;
       }
   } else {
@@ -452,7 +511,7 @@ async function processWord() {
     const h = new Date();
     const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
     
-    let limpo = $("schoolSelect").value.replace(/E\.M\.E\.B\.\s*/gi, '').replace(/EMEB\s*/gi, '').replace(/I\.E\.I\s*/gi, '').replace(/Prof\.\s*/gi, '').replace(/Cônego\s*/gi, '').replace(/Dom\s*/gi, '').replace(/Professora\s*/gi, '');
+    let limpo = state.school.replace(/E\.M\.E\.B\.\s*/gi, '').replace(/EMEB\s*/gi, '').replace(/I\.E\.I\s*/gi, '').replace(/Prof\.\s*/gi, '').replace(/Cônego\s*/gi, '').replace(/Dom\s*/gi, '').replace(/Professora\s*/gi, '');
     let palavras = limpo.split(/[\s\(\)]+/);
     let sigla = "";
     palavras.forEach(p => {
@@ -461,7 +520,7 @@ async function processWord() {
       }
     });
 
-    const assuntoTxt = state.category === 'consumo' ? 'MATERIAIS DE CONSUMO' : state.category === 'permanente' ? 'MATERIAIS PERMANENTES' : $("solicitacaoInput").value.toUpperCase();
+    const assuntoTxt = state.category === 'consumo' ? 'MATERIAIS DE CONSUMO' : state.category === 'permanente' ? 'MATERIAIS PERMANENTES' : state.solicitacao.toUpperCase();
 
     const itensWord = state.items.map((it, idx) => {
       const numStr = String(idx + 1).padStart(2, '0');
@@ -473,7 +532,6 @@ async function processWord() {
       return { NUM: numStr, PRODUTO: prodStr, PRODUTOS: prodStr, QTD: qtdStr, QUANTIDADE: qtdStr };
     });
 
-    // CÁLCULO DE ESPAÇOS EXTRAS PARA O MODELO CURTO
     let espacosExtras = "";
     if (!isService && state.items.length <= 7) {
         const entersNecessarios = 7 - state.items.length;
@@ -481,25 +539,25 @@ async function processWord() {
     }
 
     doc.render({
-      "NÚMERO MEMORANDO": $("memoNumberInput").value,
+      "NÚMERO MEMORANDO": state.memoNumber,
       "SIGLA ESCOLA": sigla,
       "DIA": h.getDate().toString().padStart(2,'0'),
       "MÊS": meses[h.getMonth()],
-      "NOME DA ESCOLA": $("schoolSelect").value,
-      "NOME GESTOR(A)": $("managerInput").value.toUpperCase(),
-      "NUMERO DE PORTARIA": $("portariaInput").value,
+      "NOME DA ESCOLA": state.school,
+      "NOME GESTOR(A)": state.manager.toUpperCase(),
+      "NUMERO DE PORTARIA": state.portaria,
       "SOLICITAÇÃO": assuntoTxt,
-      "SOLICITAÇÃO DESEJADA": $("solicitacaoInput").value,
-      "DETALHE PARA SOLICITAÇÃO": $("detalheInput").value,
+      "SOLICITAÇÃO DESEJADA": state.solicitacao,
+      "DETALHE PARA SOLICITAÇÃO": state.detalhe,
       "ESPACO_EXTRA": espacosExtras,
       "itens": itensWord
     });
 
     const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    saveAs(out, `Memo_${sigla}_${$("memoNumberInput").value}.docx`);
+    saveAs(out, `Memo_${sigla}_${state.memoNumber}.docx`);
     
   } catch (error) {
-    alert("ERRO: O arquivo " + fileName + " não foi encontrado. Verifique se os nomes exatos estão no GitHub.");
+    alert("ERRO: O arquivo " + fileName + " não foi encontrado no GitHub. Verifique os nomes exatos.");
     console.error(error);
   }
 }
