@@ -105,9 +105,6 @@
         <option value="permanente">Material Permanente</option>
         <option value="servico">Serviço / Manutenção</option>
       </select>
-      <div id="categoryLockedNote" class="hidden text-xs text-[var(--ink-soft)] bg-[var(--surface-muted)] rounded-lg px-3 py-2 mt-2">
-        Remova todos os itens da tabela para trocar de categoria.
-      </div>
     </section>
 
     <!-- STEP 3: Itens ou Serviços -->
@@ -434,11 +431,15 @@ function updateProgress(){
   $("generateWordBtn").disabled = !(s1 && s2 && s3);
 }
 
-// Função para buscar o modelo na mesma pasta, preencher e baixar
 async function processWord() {
   const isService = state.category === 'servico';
+  let fileName = '';
   
-  const fileName = isService ? 'MODELO_MEMORANDO_SERVICOS.docx' : 'MODELO_MEMORANDO_PRODUTOS.docx';
+  if (isService) {
+      fileName = 'MODELO_MEMORANDO_SERVICOS.docx';
+  } else {
+      fileName = state.items.length <= 7 ? 'MODELO_MEMORANDO_PRODUTOS_CURTO.docx' : 'MODELO_MEMORANDO_PRODUTOS_GRANDE.docx';
+  }
   
   try {
     const response = await fetch(fileName);
@@ -462,7 +463,6 @@ async function processWord() {
 
     const assuntoTxt = state.category === 'consumo' ? 'MATERIAIS DE CONSUMO' : state.category === 'permanente' ? 'MATERIAIS PERMANENTES' : $("solicitacaoInput").value.toUpperCase();
 
-    // Váriaveis protegidas e duplicadas para garantir o acerto da tabela independente da tag que você usou
     const itensWord = state.items.map((it, idx) => {
       const numStr = String(idx + 1).padStart(2, '0');
       const prodStr = (it.name || '').toUpperCase();
@@ -470,14 +470,15 @@ async function processWord() {
       const u = it.unit || 'UNIDADE';
       const qtdStr = `${String(q).padStart(2, '0')} ${u.toUpperCase()}${q > 1 && !u.toLowerCase().endsWith('S') ? 'S' : ''}`;
       
-      return {
-        NUM: numStr,
-        PRODUTO: prodStr,
-        PRODUTOS: prodStr,
-        QTD: qtdStr,
-        QUANTIDADE: qtdStr
-      };
+      return { NUM: numStr, PRODUTO: prodStr, PRODUTOS: prodStr, QTD: qtdStr, QUANTIDADE: qtdStr };
     });
+
+    // CÁLCULO DE ESPAÇOS EXTRAS PARA O MODELO CURTO
+    let espacosExtras = "";
+    if (!isService && state.items.length <= 7) {
+        const entersNecessarios = 7 - state.items.length;
+        espacosExtras = "\n".repeat(entersNecessarios);
+    }
 
     doc.render({
       "NÚMERO MEMORANDO": $("memoNumberInput").value,
@@ -490,6 +491,7 @@ async function processWord() {
       "SOLICITAÇÃO": assuntoTxt,
       "SOLICITAÇÃO DESEJADA": $("solicitacaoInput").value,
       "DETALHE PARA SOLICITAÇÃO": $("detalheInput").value,
+      "ESPACO_EXTRA": espacosExtras,
       "itens": itensWord
     });
 
@@ -497,7 +499,7 @@ async function processWord() {
     saveAs(out, `Memo_${sigla}_${$("memoNumberInput").value}.docx`);
     
   } catch (error) {
-    alert("ERRO: O navegador bloqueou o carregamento do arquivo modelo. Verifique os nomes dos arquivos na pasta do GitHub: MODELO_MEMORANDO_SERVICOS.docx e MODELO_MEMORANDO_PRODUTOS.docx");
+    alert("ERRO: O arquivo " + fileName + " não foi encontrado. Verifique se os nomes exatos estão no GitHub.");
     console.error(error);
   }
 }
