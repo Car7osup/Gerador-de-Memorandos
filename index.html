@@ -3,6 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- ========================================== -->
+<!-- SISTEMA ANTI-CACHE (Para não precisar de Ctrl+F5) -->
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<!-- ========================================== -->
+
 <title>SEMED · Gerador de Memorando</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <!-- Bibliotecas para gerar o Word -->
@@ -161,7 +169,7 @@
             </div>
           </div>
           
-          <div class="flex gap-2 flex-1 sm:w-32 w-full">
+          <div class="flex gap-2 flex-1 sm:w-48 w-full">
             <div class="w-full">
               <label class="field-label" id="catalogQtyLabel">Qtd.</label>
               <input id="catalogQty" type="number" min="1" value="1" class="mt-1 w-full">
@@ -776,7 +784,7 @@ async function processWord() {
   }
   
   try {
-    const response = await fetch(fileName);
+    const response = await fetch(fileName + '?v=' + new Date().getTime());
     if (!response.ok) throw new Error("Arquivo não encontrado.");
     const arrayBuffer = await response.arrayBuffer();
     
