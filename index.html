@@ -87,8 +87,8 @@
             <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
             </div>
-            <div id="schoolDropdownList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
           </div>
+          <div id="schoolDropdownList" class="absolute z-50 w-full mt-1 bg-white border border-[var(--line)] rounded-lg shadow-xl hidden max-h-60 overflow-y-auto custom-scrollbar"></div>
           <div id="variantSelectorBlock" class="hidden mt-3 p-3 bg-[var(--surface-muted)] rounded-lg border border-[var(--line)]"></div>
         </div>
 
@@ -882,6 +882,25 @@ async function processWord() {
     console.error(error);
   }
 }
+
+// ==========================================
+// BLOQUEIO DE CURIOSOS (Desabilita F12 e Botão Direito)
+// ==========================================
+document.addEventListener('contextmenu', event => event.preventDefault());
+document.addEventListener('keydown', event => {
+  if (event.keyCode === 123) {
+    event.preventDefault();
+    return false;
+  }
+  if (event.ctrlKey && event.shiftKey && (event.keyCode === 73 || event.keyCode === 74)) {
+    event.preventDefault();
+    return false;
+  }
+  if (event.ctrlKey && event.keyCode === 85) {
+    event.preventDefault();
+    return false;
+  }
+});
 
 init();
 </script>
