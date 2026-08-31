@@ -109,8 +109,8 @@
           <input id="portariaInput" type="text" class="mt-1" placeholder="Ex: 123/2026">
         </div>
         <div>
-          <label class="field-label">Nº do Memorando</label>
-          <input id="memoNumberInput" type="text" class="font-mono-num mt-1" value="001">
+          <label class="field-label text-[var(--navy)]">Nº do Memorando <span class="text-[var(--danger)]">*</span></label>
+          <input id="memoNumberInput" type="text" class="font-mono-num mt-1" placeholder="Ex: 001" autocomplete="off">
         </div>
       </div>
     </section>
@@ -428,7 +428,7 @@ const CATALOG = [
 
 const $ = (id) => document.getElementById(id);
 
-let state = { school: "", manager: "", portaria: "", memoNumber: "001", category: "", items: [] };
+let state = { school: "", manager: "", portaria: "", memoNumber: "", category: "", items: [] };
 let currentSchoolObj = null;
 
 function init(){
@@ -624,7 +624,16 @@ function handleCategoryChange(item) {
 function bindEvents(){
   $("managerInput").addEventListener("input", e => { state.manager = e.target.value; updateProgress(); });
   $("portariaInput").addEventListener("input", e => { state.portaria = e.target.value; updateProgress(); });
-  $("memoNumberInput").addEventListener("input", e => { state.memoNumber = e.target.value; });
+  
+  // Limpa o aviso de erro do número do memo quando o usuário começa a digitar
+  $("memoNumberInput").addEventListener("input", e => { 
+    state.memoNumber = e.target.value; 
+    const memoInput = $("memoNumberInput");
+    memoInput.classList.remove("border-[var(--danger)]", "ring-2", "ring-red-200");
+    const errorMsg = $("memoErrorMsg");
+    if(errorMsg) errorMsg.remove();
+    updateProgress(); 
+  });
   
   $("addCatalogItemBtn").addEventListener("click", onAddCatalogItem);
   $("addCustomItemBtn").addEventListener("click", onAddCustomItem);
@@ -741,7 +750,8 @@ function renderItemsTable(){
 }
 
 function updateProgress(){
-  const s1 = state.school && state.manager && state.portaria;
+  // O botão agora fica liberado sem o memoNumber para permitir a verificação visual
+  const s1 = state.school && state.manager;
   const s2 = !!state.category;
   let s3 = state.items.length > 0;
 
@@ -760,19 +770,25 @@ function updateProgress(){
   $("generateWordBtn").disabled = !(s1 && s2 && s3);
 }
 
-function formatPlural(u, q) {
-  if (q <= 1) return u.toUpperCase();
-  let str = u.toUpperCase();
-  if (str === 'GARRAFÃO') return 'GARRAFÕES';
-  if (str === 'BOTIJÃO' || str === 'GALÃO') return str.replace('ÃO', 'ÕES');
-  if (str === 'RESMA') return 'RESMAS';
-  if (str === 'REFIL') return 'REFIS';
-  if (str === 'SERVIÇO') return 'SERVIÇOS';
-  if (!str.endsWith('S')) return str + 'S';
-  return str;
-}
-
 async function processWord() {
+  // Verificação visual do Número do Memorando ao clicar em Gerar
+  if (!state.memoNumber || state.memoNumber.trim() === "") {
+    const memoInput = $("memoNumberInput");
+    memoInput.classList.add("border-[var(--danger)]", "ring-2", "ring-red-200");
+    memoInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    memoInput.focus();
+
+    let errorMsg = $("memoErrorMsg");
+    if (!errorMsg) {
+        errorMsg = document.createElement("div");
+        errorMsg.id = "memoErrorMsg";
+        errorMsg.className = "text-[var(--danger)] text-xs font-bold mt-1";
+        errorMsg.innerText = "Obrigatório para gerar o documento!";
+        memoInput.parentElement.appendChild(errorMsg);
+    }
+    return; // Para a execução do código aqui e não gera o word
+  }
+
   const isTI = state.category === 'ti';
   const isSrv = state.category === 'servico';
   let fileName = '';
@@ -883,10 +899,8 @@ async function processWord() {
     });
 
     const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    // Gera o nome do arquivo no padrão solicitado
-    let nomeArquivo = `MEMO ${state.memoNumber} - SOLICITAÇÃO DE ${assuntoTxt} - ${sigla}.docx`;
     
-    // Remove caracteres proibidos pelo Windows (como barras ou aspas) caso existam na descrição
+    let nomeArquivo = `MEMO ${state.memoNumber} - SOLICITAÇÃO DE ${assuntoTxt} - ${sigla}.docx`;
     nomeArquivo = nomeArquivo.replace(/[\\/:*?"<>|]/g, '-');
     
     saveAs(out, nomeArquivo);
