@@ -625,6 +625,7 @@ function bindEvents(){
   $("managerInput").addEventListener("input", e => { state.manager = e.target.value; updateProgress(); });
   $("portariaInput").addEventListener("input", e => { state.portaria = e.target.value; updateProgress(); });
   
+  // Limpa o aviso de erro do número do memo quando o usuário começa a digitar
   $("memoNumberInput").addEventListener("input", e => { 
     state.memoNumber = e.target.value; 
     const memoInput = $("memoNumberInput");
@@ -819,7 +820,8 @@ async function processWord() {
     const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
     const h = new Date();
-    const meses = ["Janeiro","Fevereiro","Março","Abril","Maio","Junho","Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"];
+    // Meses com letra inicial minúscula
+    const meses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
     
     let limpo = state.school.replace(/E\.M\.E\.B\.\s*/gi, '').replace(/EMEB\s*/gi, '').replace(/I\.E\.I\s*/gi, '').replace(/Prof\.\s*/gi, '').replace(/Cônego\s*/gi, '').replace(/Dom\s*/gi, '').replace(/Professora\s*/gi, '');
     let palavras = limpo.split(/[\s\(\)]+/);
@@ -893,8 +895,11 @@ async function processWord() {
         espacosExtras = "\n".repeat(entersNecessarios);
     }
 
+    // Formata o número do memorando adicionando "0" à esquerda se for número simples
+    let formatMemo = state.memoNumber.trim().replace(/^\d+/, match => match.padStart(2, '0'));
+
     doc.render({
-      "NÚMERO MEMORANDO": state.memoNumber,
+      "NÚMERO MEMORANDO": formatMemo,
       "SIGLA ESCOLA": sigla,
       "DIA": h.getDate().toString().padStart(2,'0'),
       "MÊS": meses[h.getMonth()],
@@ -911,7 +916,7 @@ async function processWord() {
 
     const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
     
-    let nomeArquivo = `MEMO ${state.memoNumber} - SOLICITAÇÃO DE ${assuntoTxt} - ${sigla}.docx`;
+    let nomeArquivo = `MEMO ${formatMemo} - SOLICITAÇÃO DE ${assuntoTxt} - ${sigla}.docx`;
     nomeArquivo = nomeArquivo.replace(/[\\/:*?"<>|]/g, '-');
     
     saveAs(out, nomeArquivo);
