@@ -625,7 +625,6 @@ function bindEvents(){
   $("managerInput").addEventListener("input", e => { state.manager = e.target.value; updateProgress(); });
   $("portariaInput").addEventListener("input", e => { state.portaria = e.target.value; updateProgress(); });
   
-  // Limpa o aviso de erro do número do memo quando o usuário começa a digitar
   $("memoNumberInput").addEventListener("input", e => { 
     state.memoNumber = e.target.value; 
     const memoInput = $("memoNumberInput");
@@ -750,7 +749,6 @@ function renderItemsTable(){
 }
 
 function updateProgress(){
-  // O botão agora fica liberado sem o memoNumber para permitir a verificação visual
   const s1 = state.school && state.manager;
   const s2 = !!state.category;
   let s3 = state.items.length > 0;
@@ -770,8 +768,19 @@ function updateProgress(){
   $("generateWordBtn").disabled = !(s1 && s2 && s3);
 }
 
+function formatPlural(u, q) {
+  if (q <= 1) return u.toUpperCase();
+  let str = u.toUpperCase();
+  if (str === 'GARRAFÃO') return 'GARRAFÕES';
+  if (str === 'BOTIJÃO' || str === 'GALÃO') return str.replace('ÃO', 'ÕES');
+  if (str === 'RESMA') return 'RESMAS';
+  if (str === 'REFIL') return 'REFIS';
+  if (str === 'SERVIÇO') return 'SERVIÇOS';
+  if (!str.endsWith('S')) return str + 'S';
+  return str;
+}
+
 async function processWord() {
-  // Verificação visual do Número do Memorando ao clicar em Gerar
   if (!state.memoNumber || state.memoNumber.trim() === "") {
     const memoInput = $("memoNumberInput");
     memoInput.classList.add("border-[var(--danger)]", "ring-2", "ring-red-200");
@@ -786,7 +795,7 @@ async function processWord() {
         errorMsg.innerText = "Obrigatório para gerar o documento!";
         memoInput.parentElement.appendChild(errorMsg);
     }
-    return; // Para a execução do código aqui e não gera o word
+    return;
   }
 
   const isTI = state.category === 'ti';
@@ -795,12 +804,14 @@ async function processWord() {
   
   if (isTI) {
       fileName = 'MODELO_MEMORANDO_TI.docx';
+  } else if (isSrv) {
+      fileName = 'MODELO_MEMORANDO_SERVICOS.docx';
   } else {
       fileName = state.items.length <= 7 ? 'MODELO_MEMORANDO_PRODUTOS_CURTO.docx' : 'MODELO_MEMORANDO_PRODUTOS_GRANDE.docx';
   }
   
   try {
-    const response = await fetch(fileName + '?v=' + new Date().getTime());
+    const response = await fetch('./' + fileName, { cache: 'no-store' });
     if (!response.ok) throw new Error("Arquivo não encontrado.");
     const arrayBuffer = await response.arrayBuffer();
     
