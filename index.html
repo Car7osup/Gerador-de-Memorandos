@@ -214,13 +214,9 @@
               </div>
             </div>
             
-            <div class="w-full relative">
-              <div class="flex justify-between">
-                <label class="field-label" id="customQtyLabel">Qtd.</label>
-                <!-- Botão da IA -->
-                <button type="button" id="btnImproveAI" class="text-[10px] font-bold text-[var(--gold)] hover:underline hidden" onclick="improveTextWithAI()">🪄 Melhorar com IA</button>
-              </div>
-              <input id="customQty" type="text" value="" class="mt-1 w-full" placeholder="Descreva aqui...">
+            <div class="w-full">
+              <label class="field-label" id="customQtyLabel">Qtd.</label>
+              <input id="customQty" type="number" min="1" value="1" class="mt-1 w-full">
             </div>
           </div>
           <button id="addCustomItemBtn" class="btn btn-ghost mt-3">Adicionar pedido avulso</button>
@@ -432,7 +428,7 @@ const CATALOG = [
 
 const $ = (id) => document.getElementById(id);
 
-let state = { school: "", manager: "", portaria: "", memoNumber: "", category: "", items: [], usedAI: false };
+let state = { school: "", manager: "", portaria: "", memoNumber: "", category: "", items: [] };
 let currentSchoolObj = null;
 
 function init(){
@@ -579,7 +575,6 @@ function handleCategoryChange(item) {
   }
   
   state.category = newVal;
-  state.usedAI = false; // Reseta a flag da IA ao trocar de categoria
   const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
   
   if(state.category === 'expediente') {
@@ -612,13 +607,11 @@ function handleCategoryChange(item) {
     if(thLabel) thLabel.innerText = "QTD / DETALHES";
     if(state.category === 'ti') { $("tiModelBlock").classList.remove("hidden"); }
     else { $("tiModelBlock").classList.add("hidden"); }
-    $("btnImproveAI").classList.remove("hidden");
   } else {
     $("customUnitBlock").classList.remove("hidden");
     const thLabel = $("tableQtyHeader");
     if(thLabel) thLabel.innerText = "QTD.";
     $("tiModelBlock").classList.add("hidden");
-    $("btnImproveAI").classList.add("hidden");
   }
 
   $("catalogInput").value = ""; 
@@ -722,12 +715,7 @@ function onAddCustomItem(){
   renderItemsTable(); updateProgress();
 }
 
-function removeItem(idx){ 
-  state.items.splice(idx, 1); 
-  if (state.items.length === 0) state.usedAI = false; // Reseta se esvaziar a lista
-  renderItemsTable(); 
-  updateProgress(); 
-}
+function removeItem(idx){ state.items.splice(idx, 1); renderItemsTable(); updateProgress(); }
 
 function updateItemQty(idx, val){ 
   const isSrvOrTi = state.category === 'servico' || state.category === 'ti';
@@ -792,51 +780,6 @@ function formatPlural(u, q) {
   return str;
 }
 
-// ==========================================
-// FUNÇÃO DA INTELIGÊNCIA ARTIFICIAL (N8N)
-// ==========================================
-async function improveTextWithAI() {
-  const inputField = $("customQty");
-  const originalText = inputField.value.trim();
-  
-  if (!originalText || originalText === "1" || originalText === "-") {
-    alert("Por favor, digite alguma descrição primeiro para que a Inteligência Artificial possa melhorar o seu texto!");
-    inputField.focus();
-    return;
-  }
-
-  const btn = $("btnImproveAI");
-  const oldBtnText = btn.innerHTML;
-  btn.innerHTML = "⏳ Pensando...";
-  btn.disabled = true;
-
-  try {
-    const webhookUrl = "https://car7osup.app.n8n.cloud/webhook/melhorar-texto";
-
-    const response = await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ texto_original: originalText })
-    });
-
-    if (!response.ok) throw new Error("Erro na rede");
-    
-    const data = await response.json();
-    if (data.texto_melhorado) {
-       inputField.value = data.texto_melhorado;
-       state.usedAI = true; // Marca que a IA foi usada para trocar o arquivo Word depois!
-    } else {
-       alert("A Inteligência Artificial não conseguiu processar o texto agora. Tente novamente.");
-    }
-  } catch (error) {
-    console.error(error);
-    alert("Erro de conexão. Verifique se a IA está ativada no momento.");
-  } finally {
-    btn.innerHTML = oldBtnText;
-    btn.disabled = false;
-  }
-}
-
 async function processWord() {
   if (!state.memoNumber || state.memoNumber.trim() === "") {
     const memoInput = $("memoNumberInput");
@@ -862,12 +805,7 @@ async function processWord() {
   if (isTI) {
       fileName = 'MODELO_MEMORANDO_TI.docx';
   } else if (isSrv) {
-      // Se for serviço, checa se a pessoa usou o botão mágico da IA
-      if (state.usedAI) {
-          fileName = 'MODELO_MEMORANDO_AI.docx';
-      } else {
-          fileName = 'MODELO_MEMORANDO_SERVICOS.docx';
-      }
+      fileName = 'MODELO_MEMORANDO_SERVICOS.docx';
   } else {
       fileName = state.items.length <= 7 ? 'MODELO_MEMORANDO_PRODUTOS_CURTO.docx' : 'MODELO_MEMORANDO_PRODUTOS_GRANDE.docx';
   }
@@ -881,6 +819,7 @@ async function processWord() {
     const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
     const h = new Date();
+    // Meses com letra inicial minúscula
     const meses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
     
     let limpo = state.school.replace(/E\.M\.E\.B\.\s*/gi, '').replace(/EMEB\s*/gi, '').replace(/I\.E\.I\s*/gi, '').replace(/Prof\.\s*/gi, '').replace(/Cônego\s*/gi, '').replace(/Dom\s*/gi, '').replace(/Professora\s*/gi, '');
@@ -955,13 +894,8 @@ async function processWord() {
         espacosExtras = "\n".repeat(entersNecessarios);
     }
 
+    // Formata o número do memorando adicionando "0" à esquerda se for número simples
     let formatMemo = state.memoNumber.trim().replace(/^\d+/, match => match.padStart(2, '0'));
-    
-    // Pega o texto que a IA gerou (que foi jogado pro campo de QTD/Detalhes e salvo no array)
-    let textoRespostaAI = "";
-    if (state.usedAI && state.items.length > 0) {
-        textoRespostaAI = state.items[0].qty;
-    }
 
     doc.render({
       "NÚMERO MEMORANDO": formatMemo,
@@ -976,7 +910,6 @@ async function processWord() {
       "SERVICO": tiServico,
       "DA(O)": tiDao,
       "APARELHO": tiAparelho,
-      "resposta AI": textoRespostaAI,
       "itens": itensWord
     });
 
