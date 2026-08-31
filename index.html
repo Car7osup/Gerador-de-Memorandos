@@ -473,7 +473,6 @@ function init(){
   initCustomDropdown("catalogColorInput", "catalogColorList", "catalogColorWrapper", () => COLOR_OPTS, null);
   initCustomDropdown("customColorInput", "customColorList", "customColorWrapper", () => COLOR_OPTS, null);
   initCustomDropdown("customUnitInput", "customUnitList", "customUnitWrapper", () => UNIT_OPTS, null);
-  
   initCustomDropdown("catalogInput", "catalogList", "catalogWrapper", getCatalogOptions, checkTiModelRequirement);
 
   bindEvents();
@@ -852,10 +851,10 @@ async function runAssistant() {
   btn.disabled = true;
 
   try {
-    const p1 = "AQ.Ab8RN6Kl"; 
-    const p2 = "j1HXnh1RX52c"; 
-    const p3 = "vvlrQulKCkjP";
-    const p4 = "QUjZ0ov5EcilYdFWLw";
+    const p1 = "AQ.Ab8RN6LCKll8s"; 
+    const p2 = "J5yUPUrpMWtQmtvE"; 
+    const p3 = "PWoTTAauqV8uxwyj";
+    const p4 = "pJwNQ";
     
     // O sistema junta a chave na hora pra enganar o robô de segurança
     const GEMINI_API_KEY = p1 + p2 + p3 + p4; 
@@ -886,4 +885,199 @@ async function runAssistant() {
     let jsonResult = data.candidates[0].content.parts[0].text.trim();
     
     // Limpa possível formatação markdown indesejada que a IA manda as vezes
-    jsonResult = jsonResult.replace(/^```json/g, '').replace(/^
+    jsonResult = jsonResult.replace(/^```json/g, '').replace(/^```/g, '').replace(/```$/g, '').trim();
+    
+    // Preenche os campos sozinhos
+    const parsedData = JSON.parse(jsonResult);
+    $("customName").value = parsedData.nome || "SERVIÇO SOLICITADO";
+    $("customQty").value = parsedData.descricao || "";
+    
+    state.usedAI = true; 
+    closeAIModal();
+    
+  } catch (error) {
+    console.error(error);
+    alert("Erro de conexão! A IA pode estar indisponível.");
+  } finally {
+    btn.innerHTML = oldBtnText;
+    btn.disabled = false;
+  }
+}
+
+async function processWord() {
+  if (!state.memoNumber || state.memoNumber.trim() === "") {
+    const memoInput = $("memoNumberInput");
+    memoInput.classList.add("border-[var(--danger)]", "ring-2", "ring-red-200");
+    memoInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    memoInput.focus();
+
+    let errorMsg = $("memoErrorMsg");
+    if (!errorMsg) {
+        errorMsg = document.createElement("div");
+        errorMsg.id = "memoErrorMsg";
+        errorMsg.className = "text-[var(--danger)] text-xs font-bold mt-1";
+        errorMsg.innerText = "Obrigatório para gerar o documento!";
+        memoInput.parentElement.appendChild(errorMsg);
+    }
+    return;
+  }
+
+  const isTI = state.category === 'ti';
+  const isSrv = state.category === 'servico';
+  let fileName = '';
+  
+  if (isTI) {
+      fileName = 'MODELO_MEMORANDO_TI.docx';
+  } else if (isSrv) {
+      if (state.usedAI) {
+          fileName = 'MODELO_MEMORANDO_AI.docx';
+      } else {
+          fileName = 'MODELO_MEMORANDO_SERVICOS.docx';
+      }
+  } else {
+      fileName = state.items.length <= 7 ? 'MODELO_MEMORANDO_PRODUTOS_CURTO.docx' : 'MODELO_MEMORANDO_PRODUTOS_GRANDE.docx';
+  }
+  
+  try {
+    const response = await fetch('./' + fileName, { cache: 'no-store' });
+    if (!response.ok) throw new Error("Arquivo não encontrado.");
+    const arrayBuffer = await response.arrayBuffer();
+    
+    const zip = new PizZip(arrayBuffer);
+    const doc = new window.docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+    const h = new Date();
+    const meses = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
+    
+    let limpo = state.school.replace(/E\.M\.E\.B\.\s*/gi, '').replace(/EMEB\s*/gi, '').replace(/I\.E\.I\s*/gi, '').replace(/Prof\.\s*/gi, '').replace(/Cônego\s*/gi, '').replace(/Dom\s*/gi, '').replace(/Professora\s*/gi, '');
+    let palavras = limpo.split(/[\s\(\)]+/);
+    let sigla = "";
+    palavras.forEach(p => {
+      if (!['de', 'da', 'do', 'das', 'dos', 'e', '-'].includes(p.toLowerCase()) && p.length > 0) {
+        sigla += p[0].toUpperCase();
+      }
+    });
+
+    let assuntoTxt = "";
+    if (isSrv || isTI) {
+        assuntoTxt = state.items[0].name.toUpperCase();
+    } else {
+        switch(state.category) {
+            case 'limpeza': assuntoTxt = 'MATERIAIS DE LIMPEZA'; break;
+            case 'expediente': assuntoTxt = 'MATERIAIS DE EXPEDIENTE'; break;
+            case 'permanente': assuntoTxt = 'MATERIAIS PERMANENTES'; break;
+            case 'cozinha': assuntoTxt = 'UTENSÍLIOS DE COZINHA'; break;
+            case 'agua': assuntoTxt = 'FORNECIMENTO DE ÁGUA'; break;
+            case 'gas': assuntoTxt = 'FORNECIMENTO DE GÁS'; break;
+        }
+    }
+
+    const itensWord = state.items.map((it, idx) => {
+      const numStr = String(idx + 1).padStart(2, '0');
+      const prodStr = (it.name || '').toUpperCase();
+      let qtdStr = "";
+      
+      if (isSrv || isTI) {
+          if (!isNaN(it.qty) && it.qty !== "" && it.qty !== "-") {
+              const q = parseInt(it.qty);
+              const u = it.unit || 'SERVIÇO';
+              qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
+          } else {
+              qtdStr = String(it.qty).toUpperCase();
+          }
+      } else {
+          const q = parseInt(it.qty) || 1;
+          const u = it.unit || 'UNIDADE';
+          qtdStr = `${String(q).padStart(2, '0')} ${formatPlural(u, q)}`;
+      }
+      
+      return { NUM: numStr, PRODUTO: prodStr, PRODUTOS: prodStr, APARELHO: prodStr, QTD: qtdStr, QUANTIDADE: qtdStr };
+    });
+
+    let tiServico = "MANUTENÇÃO";
+    let tiDao = "DE";
+    let tiAparelho = "EQUIPAMENTOS DE T.I.";
+
+    if (isTI && state.items.length > 0) {
+        let firstItemName = state.items[0].name.toLowerCase();
+        if (firstItemName.includes("cpu")) {
+            tiServico = "MANUTENÇÃO"; tiDao = "DA"; tiAparelho = "CPU";
+        } else if (firstItemName.includes("impressora")) {
+            tiServico = "MANUTENÇÃO"; tiDao = "DA"; tiAparelho = "IMPRESSORA";
+        } else if (firstItemName.includes("scanner")) {
+            tiServico = "MANUTENÇÃO"; tiDao = "DO"; tiAparelho = "SCANNER";
+        } else if (firstItemName.includes("toner")) {
+            tiServico = "TROCA"; tiDao = "DE"; tiAparelho = "TONER";
+        } else if (firstItemName.includes("tinta") || firstItemName.includes("refil")) {
+            tiServico = "REABASTECIMENTO"; tiDao = "DE"; tiAparelho = "TINTA";
+        } else {
+            tiServico = "REALIZAÇÃO"; tiDao = "DE"; tiAparelho = state.items[0].name.toUpperCase();
+        }
+    }
+
+    let espacosExtras = "";
+    if (state.items.length <= 7) {
+        const entersNecessarios = 7 - state.items.length;
+        espacosExtras = "\n".repeat(entersNecessarios);
+    }
+
+    let formatMemo = state.memoNumber.trim().replace(/^\d+/, match => match.padStart(2, '0'));
+    
+    let textoRespostaAI = "";
+    if (state.usedAI && state.items.length > 0) {
+        textoRespostaAI = state.items[0].qty;
+    }
+
+    doc.render({
+      "NÚMERO MEMORANDO": formatMemo,
+      "SIGLA ESCOLA": sigla,
+      "DIA": h.getDate().toString().padStart(2,'0'),
+      "MÊS": meses[h.getMonth()],
+      "NOME DA ESCOLA": state.school,
+      "NOME GESTOR(A)": state.manager.toUpperCase(),
+      "NUMERO DE PORTARIA": state.portaria,
+      "SOLICITAÇÃO": assuntoTxt,
+      "ESPACO_EXTRA": espacosExtras,
+      "SERVICO": tiServico,
+      "DA(O)": tiDao,
+      "APARELHO": tiAparelho,
+      "resposta AI": textoRespostaAI,
+      "itens": itensWord
+    });
+
+    const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
+    
+    let nomeArquivo = `MEMO ${formatMemo} - SOLICITAÇÃO DE ${assuntoTxt} - ${sigla}.docx`;
+    nomeArquivo = nomeArquivo.replace(/[\\/:*?"<>|]/g, '-');
+    
+    saveAs(out, nomeArquivo);
+    
+  } catch (error) {
+    alert("ERRO: O arquivo " + fileName + " não foi encontrado no GitHub.");
+    console.error(error);
+  }
+}
+
+// ==========================================
+// BLOQUEIO DE CURIOSOS
+// ==========================================
+document.addEventListener('contextmenu', event => event.preventDefault());
+document.addEventListener('keydown', event => {
+  if (event.keyCode === 123) {
+    event.preventDefault();
+    return false;
+  }
+  if (event.ctrlKey && event.shiftKey && (event.keyCode === 73 || event.keyCode === 74)) {
+    event.preventDefault();
+    return false;
+  }
+  if (event.ctrlKey && event.keyCode === 85) {
+    event.preventDefault();
+    return false;
+  }
+});
+
+init();
+</script>
+</body>
+</html>
