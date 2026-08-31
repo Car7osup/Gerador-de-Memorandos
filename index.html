@@ -290,7 +290,7 @@
   </div>
 
 <script>
-// LISTA COMPLETA RESTAURADA
+// LISTA COMPLETA
 const SCHOOLS = [
   { name: "EMEB ADROALDO ALVES MATOS", variants: [{ label: "Regular", suffix: "", director: "ANTONIO ALMEIDA BEZERRA" }, { label: "EJA", suffix: " - EJA", director: "GRACILEIA SOUSA DOS ANJOS" }] },
   { name: "EMEB DR ANTONIO MUNIZ ALVES", director: "ELISÂNGELA LIMA RODRIGUES" },
@@ -874,8 +874,8 @@ async function runAssistant() {
   btn.disabled = true;
 
   try {
-    // 👇👇 SEU LINK DO GOOGLE APPS SCRIPT INSERIDO AQUI 👇👇
-    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyDtusll_2TKCctPORn2rGj5NtSYkiQkd53iwLHSPvKDPfAKSwOZJ-hH5hHlvbGDRozyg/exec"; 
+    // 👇 LINK DO GOOGLE APPS SCRIPT ATUALIZADO 👇
+    const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxIG0FWflkr0ZkyHDKFnNiu01yYcNbvbPZFFtz3qo_N4KXofHitEmI347ZL4uG_cQ9XcQ/exec"; 
 
     const response = await fetch(WEBHOOK_URL, {
       method: "POST",
@@ -886,7 +886,6 @@ async function runAssistant() {
     
     const parsedData = await response.json();
     
-    // Se o Google Apps Script der erro interno com a chave lá, ele devolve { "erro": "mensagem" }
     if (parsedData.erro) {
         throw new Error("Erro interno no Google: " + parsedData.erro);
     }
