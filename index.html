@@ -883,7 +883,13 @@ async function processWord() {
     });
 
     const out = doc.getZip().generate({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document" });
-    saveAs(out, `Memo_${sigla}_${state.memoNumber}.docx`);
+    // Gera o nome do arquivo no padrão solicitado
+    let nomeArquivo = `MEMO ${state.memoNumber} - SOLICITAÇÃO DE ${assuntoTxt} - ${sigla}.docx`;
+    
+    // Remove caracteres proibidos pelo Windows (como barras ou aspas) caso existam na descrição
+    nomeArquivo = nomeArquivo.replace(/[\\/:*?"<>|]/g, '-');
+    
+    saveAs(out, nomeArquivo);
     
   } catch (error) {
     alert("ERRO: O arquivo " + fileName + " não foi encontrado no GitHub.");
