@@ -273,11 +273,16 @@
         
         <textarea id="aiInputText" rows="4" class="w-full border border-[var(--line)] rounded-xl p-4 text-[15px] focus:ring-2 focus:ring-[var(--navy)] focus:border-[var(--navy)] outline-none resize-none shadow-inner" placeholder="Ex: a tomada da sala 2 pipocou e queimou o ventilador, precisa arrumar as duas coisas..."></textarea>
         
-        <div class="flex justify-end gap-3 pt-3">
-          <button onclick="closeAIModal()" class="btn btn-ghost bg-white border border-[var(--line)]">Cancelar</button>
-          <button id="btnRunAI" onclick="runAssistant()" class="btn bg-gradient-to-r from-[var(--gold)] to-[#d49a2b] text-white shadow-md font-bold px-6">
-            ✨ Preencher Automático
-          </button>
+        <div class="flex justify-between items-center pt-3">
+          <!-- Botão para limpar a chave da memória caso dê erro no futuro -->
+          <button onclick="resetarChave()" class="text-[10px] text-gray-400 hover:text-[var(--danger)] underline">Trocar Chave de API</button>
+          
+          <div class="flex gap-3">
+            <button onclick="closeAIModal()" class="btn btn-ghost bg-white border border-[var(--line)]">Cancelar</button>
+            <button id="btnRunAI" onclick="runAssistant()" class="btn bg-gradient-to-r from-[var(--gold)] to-[#d49a2b] text-white shadow-md font-bold px-6">
+              ✨ Preencher
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -832,8 +837,16 @@ function formatPlural(u, q) {
 }
 
 // ==========================================
-// FUNÇÕES DO MODAL E ASSISTENTE IA
+// FUNÇÕES DO MODAL E ASSISTENTE IA (NOVA CHAVE)
 // ==========================================
+
+// Para caso a chave seja revogada no futuro, você só clica no botão "Trocar Chave" no modal
+function resetarChave() {
+  localStorage.removeItem("semed_gemini_key");
+  alert("Chave removida. Cole a nova chave ao usar o assistente.");
+  $("aiInputText").focus();
+}
+
 function openAIModal() {
   $("aiModal").classList.remove("hidden");
   $("aiInputText").focus();
@@ -859,22 +872,26 @@ async function runAssistant() {
     return;
   }
 
+  // TENTA PEGAR A CHAVE DO LOCALSTORAGE PRIMEIRO
+  let geminiKey = localStorage.getItem("semed_gemini_key");
+
+  // SE NÃO TIVER, USA A NOSSA CHAVE FIXA NO CÓDIGO
+  if (!geminiKey) {
+    geminiKey = prompt("🔒 PRIMEIRA VEZ AQUI?\nPara o assistente funcionar, cole sua Chave do Google Gemini abaixo:\n(Ela ficará salva apenas no seu computador, de forma segura)");
+    if (!geminiKey) {
+        alert("O Assistente precisa da chave para funcionar.");
+        return;
+    }
+    localStorage.setItem("semed_gemini_key", geminiKey.trim());
+  }
+
   const btn = $("btnRunAI");
   const oldBtnText = btn.innerHTML;
   btn.innerHTML = "⏳ Mágica acontecendo...";
   btn.disabled = true;
 
   try {
-    // 🔑 CHAVE NOVA FATIADA E CORRETA AQUI:
-    const p1 = "AQ.Ab8RN6Klj"; 
-    const p2 = "1HXnh1RX52cv"; 
-    const p3 = "vlrQulKCkjPQ";
-    const p4 = "UjZ0ov5EcilYdFWLw";
-    
-    // O sistema junta a chave na hora pra enganar o robô de segurança
-    const GEMINI_API_KEY = p1 + p2 + p3 + p4; 
-    
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`;
 
     const promptText = `Aja como um assistente administrativo da Secretaria de Educação. O usuário enviou uma frase coloquial informando um problema ou serviço necessário.
     Transforme a frase em um pedido formal e direto para constar em um memorando de ofício.
@@ -894,7 +911,13 @@ async function runAssistant() {
       })
     });
 
-    if (!response.ok) throw new Error("Erro de comunicação com a IA");
+    if (!response.ok) {
+        if(response.status === 400 || response.status === 403) {
+            localStorage.removeItem("semed_gemini_key");
+            throw new Error("Sua chave do Google é inválida ou expirou. Crie uma nova e cole novamente.");
+        }
+        throw new Error("Erro na IA: " + response.status);
+    }
     
     const data = await response.json();
     let jsonResult = data.candidates[0].content.parts[0].text.trim();
@@ -915,7 +938,7 @@ async function runAssistant() {
     
   } catch (error) {
     console.error(error);
-    alert("Erro de conexão! A IA pode estar indisponível.");
+    alert(error.message);
   } finally {
     btn.innerHTML = oldBtnText;
     btn.disabled = false;
